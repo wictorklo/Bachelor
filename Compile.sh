@@ -1,0 +1,1 @@
+solc --bin --abi -o ./build Test.sol
