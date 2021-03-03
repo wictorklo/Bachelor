@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test DApp</title>
+</head>
+<body>
+<h1>First DApp</h1>
+<label>FirstContract.getInteger</label>
+<br />
+<input type="button" value="Show" onclick="updateLabel();" />
+<label id="myLabel"></label>
+
+<input type="button" value="inc" onclick="inc();" />
+
+</body>
+<script src="https://cdn.jsdelivr.net/npm/web3@1.2.6/dist/web3.min.js"></script>
+<script>
+
+    const web3 = new Web3('http://localhost:8545');
+
+    const myContractAddress = '0xcD10502262C61301a7b534d06BB6FbaAE4Ddc75b';
+    const myAbi = [{"inputs":[{"internalType":"uint256","name":"num","type":"uint256"}],"name":"dec","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"num","type":"uint256"}],"name":"inc","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"retrieve","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+    const myContract = new web3.eth.Contract(myAbi, myContractAddress);
+
+    function updateLabel() {
+        let htmlLabel = document.getElementById('myLabel');
+
+        myContract.methods.retrieve().call().then((jsonRpcResult) => {
+            htmlLabel.innerHTML = jsonRpcResult;
+        });
+    }
+
+    function inc() {
+        let acc = web3.eth.accounts.privateKeyToAccount("0xfc2817b8e2fd80cf75d174b7f73742fe9ba06525877258a586dba7e424629cdc");
+        myContract.methods.inc(5).send({from: "0x033b3AFd90AeCF30B97B09b71E71121A00bEc5b4"});
+        updateLabel();
+    }
+
+</script>
+</html>

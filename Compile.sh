@@ -1,1 +1,1 @@
-solc --bin --abi -o ./build Test.sol
+solcjs --bin --abi -o ./build *.sol
