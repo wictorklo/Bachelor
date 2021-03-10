@@ -6,10 +6,12 @@
 </head>
 <body>
 <h1>First DApp</h1>
-<label>FirstContract.getInteger</label>
+Address to call from: <input type="text" id="AddressInput" value="0x0">
 <br />
+<div id="methods"></div>
 <input type="button" value="Show" onclick="updateLabel();" />
 <label id="myLabel"></label>
+<br>
 
 <input type="button" value="inc" onclick="inc();" />
 
@@ -19,9 +21,45 @@
 
     const web3 = new Web3('http://localhost:8545');
 
-    const myContractAddress = '0xcD10502262C61301a7b534d06BB6FbaAE4Ddc75b';
+    const contractAddr = '0x9729d511D3dF002b04bdD7dd18949901341BE95f';
     const myAbi = [{"inputs":[{"internalType":"uint256","name":"num","type":"uint256"}],"name":"dec","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"num","type":"uint256"}],"name":"inc","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"retrieve","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
-    const myContract = new web3.eth.Contract(myAbi, myContractAddress);
+    const myContract = new web3.eth.Contract(myAbi, contractAddr);
+
+    function generateInput(methodName, varName, type) {
+        let field = document.createElement("input");
+        field.type = "text";
+        field.placeholder = type + ": " + varName;
+        field.id = methodName + "_" + varName;
+        return field;
+    }
+
+    function generateCaller(method) {
+        let elem = document.createElement("div");
+        let text = method.name + ": ";
+        elem.appendChild(document.createTextNode(text));
+        method.inputs.forEach(param => elem.appendChild(generateInput(method.name, param.name, param.type)));
+
+        let caller = document.createElement("input");
+        caller.type = "button";
+        caller.value = method.name;
+        if (method.stateMutability === "view") {
+            let out = document.createElement("label");
+            elem.appendChild(out);
+            let code = "myContract.methods." + method.name + ".call().then(function(Result) => {\n" +
+                "            out.innerHTML = Result;})";
+            caller.setAttribute("onclick", code);
+        } else {
+            let code = "myContract.methods." + method.name + "(";
+            method.inputs.forEach(param => code += "document.getElementById(\""+method.name + "_"+param.name+"\").value,");
+            if (method.inputs.length > 0)
+                code.slice(0, -1);
+            code += ").send({from:  document.getElementById(\"AddressInput\").value});";
+            caller.setAttribute("onclick", code);
+        }
+        elem.appendChild(caller);
+
+        document.getElementById("methods").appendChild(elem);
+    }
 
     function updateLabel() {
         let htmlLabel = document.getElementById('myLabel');
@@ -32,10 +70,12 @@
     }
 
     function inc() {
-        let acc = web3.eth.accounts.privateKeyToAccount("0xfc2817b8e2fd80cf75d174b7f73742fe9ba06525877258a586dba7e424629cdc");
-        myContract.methods.inc(5).send({from: "0x033b3AFd90AeCF30B97B09b71E71121A00bEc5b4"});
+        let addr = document.getElementById("AddressInput").value;
+        myContract.methods.inc(5).send({from: addr});
         updateLabel();
     }
 
+    myAbi.forEach(method => generateCaller(method));
 </script>
 </html>
+myContract.methods.retrieve.call().then((jsonRpcResult) {out.innerHTML = jsonRpcResult;});
