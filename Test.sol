@@ -1,33 +1,38 @@
-// SPDX-License-Identifier: GPL-3.0
+pragma solidity 0.8.0;
 
-pragma solidity >=0.7.0 <= 0.8.0;
+contract Repair {
+    uint256 public repairID = 0;
+    uint public personID = 0;
+    mapping(uint => repair) public repairs;
 
-/**
- * @title Storage
- * @dev Store & retrieve value in a variable
- */
-contract Test {
+    address owner;
 
-    uint256 number;
-
-    /**
-     * @dev Store value in variable
-     * @param num value to store
-     */
-    function inc(uint256 num) public {
-        number += num;
+    modifier onlyBy(address _account) {
+        require(msg.sender == _account);
+        _;
     }
 
-    function dec(uint256 num) public {
-        number -= num;
+    struct repair {
+        uint _repairID;
+        uint _personID;
+        string _error;
     }
 
-    /**
-     * @dev Return value 
-     * @return value of 'number'
-     */
-    function retrieve() public view returns (uint256){
-        return number;
+    constructor() public {
+        owner = msg.sender;
+    }
 
+    function addRepair(uint _personID, string memory _error) public onlyBy(owner) {
+        incrementID();
+        repairs[repairID] = repair(repairID, _personID, _error);
+    }
+
+    function fixedRepair(uint _repairID, uint _personID, string memory _error) public onlyBy(owner) {
+        incrementID();
+        repairs[repairID] = repair(_repairID, _personID, _error);
+    }
+
+    function incrementID() internal {
+        repairID ++;
     }
 }
