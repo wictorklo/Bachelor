@@ -1,6 +1,6 @@
 pragma solidity 0.8.0;
 
-contract Repair {
+contract Main {
     uint256 public repairID = 0;
     uint public personID = 0;
     mapping(uint => repair) public repairs;

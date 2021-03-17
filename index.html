@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/bootstrap.css">
     <meta charset="UTF-8">
     <title>Test DApp</title>
 </head>
@@ -10,21 +10,30 @@
 Address to call from: <input type="text" id="AddressInput" value="0x0">
 <br />
 <div id="methods"></div>
+<div id="accounts">
+    <table id="accounts-list" class="table table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Account</th>
+                <th scope="col">Balance</th>
+            </tr>
+        </thead>
+        <tbody id="account-body"></tbody>
+    </table>
+</div>
 <input type="button" value="Show" onclick="updateLabel();" />
 <label id="myLabel"></label>
 <br>
-
-<input type="button" value="inc" onclick="inc();" />
-
 </body>
 <script src="https://cdn.jsdelivr.net/npm/web3@1.2.6/dist/web3.min.js"></script>
 <script>
 
     const web3 = new Web3('http://localhost:8545');
 
-    const contractAddr = '0xe862C1b408b0Ff0AaE6085722224087421C0d946';
-    const myAbi = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"uint256","name":"_personID","type":"uint256"},{"internalType":"string","name":"_error","type":"string"}],"name":"addRepair","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_repairID","type":"uint256"},{"internalType":"uint256","name":"_personID","type":"uint256"},{"internalType":"string","name":"_error","type":"string"}],"name":"fixedRepair","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"personID","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"repairID","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"repairs","outputs":[{"internalType":"uint256","name":"_repairID","type":"uint256"},{"internalType":"uint256","name":"_personID","type":"uint256"},{"internalType":"string","name":"_error","type":"string"}],"stateMutability":"view","type":"function"}];
-    const myContract = new web3.eth.Contract(myAbi, contractAddr);
+    const contractAddr = '';
+    const ABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"uint256","name":"_personID","type":"uint256"},{"internalType":"string","name":"_error","type":"string"}],"name":"addRepair","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_repairID","type":"uint256"},{"internalType":"uint256","name":"_personID","type":"uint256"},{"internalType":"string","name":"_error","type":"string"}],"name":"fixedRepair","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"personID","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"repairID","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"repairs","outputs":[{"internalType":"uint256","name":"_repairID","type":"uint256"},{"internalType":"uint256","name":"_personID","type":"uint256"},{"internalType":"string","name":"_error","type":"string"}],"stateMutability":"view","type":"function"}];
+    const myContract = new web3.eth.Contract(ABI, contractAddr);
 
     function generateInput(methodName, varName, type) {
         let field = document.createElement("input");
@@ -70,13 +79,37 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
         });
     }
 
-    function inc() {
-        let addr = document.getElementById("AddressInput").value;
-        myContract.methods.inc(5).send({from: addr});
-        updateLabel();
+    function showAccounts() {
+        web3.eth.getAccounts().then(function (accounts) {
+            console.log(accounts);
+            let elem = document.createElement("tbody");
+            elem.id = "accounts-list";
+            elem.className = "list-group";
+            for (acc in accounts) {
+                let accountElem = document.createElement("tr");
+                let counter = document.createElement("th");
+                counter.scope = "row";
+                counter.innerHTML = acc;
+                accountElem.appendChild(counter);
+                let name = document.createElement("td");
+                name.innerHTML = accounts[acc];
+                accountElem.appendChild(name);
+                let balance = document.createElement("td");
+                web3.eth.getBalance(accounts[acc]).then(function (result) {
+                    balance.innerHTML = result;
+                });
+                accountElem.appendChild(balance);
+                elem.appendChild(accountElem);
+            }
+            let outer = document.getElementById('accounts-list');
+            let elems = document.getElementById("account-body");
+            elems.remove();
+            outer.appendChild(elem);
+        });
     }
 
-    myAbi.forEach(method => generateCaller(method));
+    ABI.forEach(method => generateCaller(method));
+    showAccounts();
+
 </script>
 </html>
-myContract.methods.retrieve.call().then((jsonRpcResult) {out.innerHTML = jsonRpcResult;});
