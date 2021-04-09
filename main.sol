@@ -1,38 +1,39 @@
 pragma solidity 0.8.0;
 
 contract Main {
-    uint256 public repairID = 0;
-    uint public personID = 0;
-    mapping(uint => repair) public repairs;
 
-    address owner;
-
-    modifier onlyBy(address _account) {
-        require(msg.sender == _account);
-        _;
+    struct Entry {
+        string name;
+        string API;
+        string addr;
     }
 
-    struct repair {
-        uint _repairID;
-        uint _personID;
-        string _error;
+    mapping (uint => Entry) contracts;
+
+    uint nContracts = 0;
+
+
+
+
+
+    function getContracts() public view returns (Entry[] memory){
+        Entry[] memory entries = new Entry[](nContracts);
+        for (uint i = 0; i < nContracts; i++){
+            entries[i] = contracts[i];
+        }
+        return entries;
     }
 
-    constructor() public {
-        owner = msg.sender;
+    function addContract(string memory _name, string memory _API, string memory _addr) public {
+        contracts[nContracts] = Entry(_name, _API, _addr);
+        nContracts++;
     }
 
-    function addRepair(uint _personID, string memory _error) public onlyBy(owner) {
-        incrementID();
-        repairs[repairID] = repair(repairID, _personID, _error);
+    function removeContract(uint index) public {
+        contracts[index] = contracts[nContracts];
+        delete contracts[index];
+        nContracts--;
     }
 
-    function fixedRepair(uint _repairID, uint _personID, string memory _error) public onlyBy(owner) {
-        incrementID();
-        repairs[repairID] = repair(_repairID, _personID, _error);
-    }
 
-    function incrementID() internal {
-        repairID ++;
-    }
 }

@@ -9,7 +9,7 @@ web3.eth.getChainId().then((res) => console.log);
 (async function () {
     const ganacheAccounts = await web3.eth.getAccounts();
 
-    const myWalletAddress = ganacheAccounts[1];
+    const myWalletAddress = ganacheAccounts[0];
 
     const myContract = new web3.eth.Contract(abi);
 

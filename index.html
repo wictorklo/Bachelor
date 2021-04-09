@@ -3,13 +3,16 @@
 <head>
     <link rel="stylesheet" href="css/bootstrap.css">
     <meta charset="UTF-8">
-    <title>Test DApp</title>
+    <title>FlightChain</title>
+    <script src="http://code.jquery.com/jquery-3.0.0.js"></script>
+    <script src="js/bootstrap.js"></script>
 </head>
 <body>
-<h1>First DApp</h1>
+<h1>FlightChain(tm)</h1>
 Address to call from: <input type="text" id="AddressInput" value="0x0">
+<input type="button" value="Log In" onclick="login()" />
 <br />
-<div id="methods"></div>
+<div class="panel-group" role="tablist" aria-multiselectable="true" id="methods"></div>
 <div id="accounts">
     <table id="accounts-list" class="table table-bordered">
         <thead class="thead-dark">
@@ -22,18 +25,22 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
         <tbody id="account-body"></tbody>
     </table>
 </div>
-<input type="button" value="Show" onclick="updateLabel();" />
-<label id="myLabel"></label>
+
 <br>
+<p id="out"></p>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/web3@1.2.6/dist/web3.min.js"></script>
 <script>
 
     const web3 = new Web3('http://localhost:8545');
 
-    const contractAddr = '';
-    const ABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"uint256","name":"_personID","type":"uint256"},{"internalType":"string","name":"_error","type":"string"}],"name":"addRepair","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_repairID","type":"uint256"},{"internalType":"uint256","name":"_personID","type":"uint256"},{"internalType":"string","name":"_error","type":"string"}],"name":"fixedRepair","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"personID","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"repairID","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"repairs","outputs":[{"internalType":"uint256","name":"_repairID","type":"uint256"},{"internalType":"uint256","name":"_personID","type":"uint256"},{"internalType":"string","name":"_error","type":"string"}],"stateMutability":"view","type":"function"}];
+    const contractAddr = '0xECF130fA947585b3adB5297eac946f83bE9E8267';
+    const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_API","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"API","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct Main.Entry[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function"}];
     const myContract = new web3.eth.Contract(ABI, contractAddr);
+
+    let callerAddr;
+
+    let out = document.getElementById("out");
 
     function generateInput(methodName, varName, type) {
         let field = document.createElement("input");
@@ -43,7 +50,41 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
         return field;
     }
 
-    function generateCaller(method) {
+    function login() {
+        web3.eth.personal.unlockAccount(document.getElementById("AddressInput").value, "", 0);
+        callerAddr = document.getElementById("AddressInput").value;
+        document.getElementById("methods").innerHTML = "";
+        myContract.methods.getContracts().call().then((Result) => {generateSections(Result)});
+        ABI.forEach(method => generateCaller(method, document.getElementById("methods")));
+    }
+
+    function generateSections(contracts){
+        let outerMethods = document.getElementById("methods");
+        contracts.forEach(contract => {
+            let panel = document.createElement("div");
+            panel.classList.add("collapsed", "panel", "panel-default");
+            let panelHead = document.createElement("div");
+            panelHead.classList.add("panel-heading");
+            panelHead.setAttribute("role", "tab");
+            let caller = document.createElement("a");
+            caller.classList.add("collapsed");
+            caller.setAttribute("role", "button");
+            caller.setAttribute("onclick", "$('#"+contract[0]+"').collapse('toggle')");
+            panelHead.appendChild(caller);
+            panel.appendChild(panelHead);
+            let elem = document.createElement("div");
+            elem.classList.add("collapse");
+            elem.id = contract[0];
+            jsonABI = JSON.parse(contract[1]);
+            console.log(elem.id + ": " + jsonABI);
+            jsonABI.forEach(method => generateCaller(method, elem));
+            panel.appendChild(elem);
+            outerMethods.appendChild(panel);
+        })
+
+    }
+
+    function generateCaller(method, container) {
         let elem = document.createElement("div");
         let text = method.name + ": ";
         elem.appendChild(document.createTextNode(text));
@@ -55,7 +96,7 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
         if (method.stateMutability === "view") {
             let out = document.createElement("label");
             elem.appendChild(out);
-            let code = "myContract.methods." + method.name + ".call().then(function(Result) => {\n" +
+            let code = "myContract.methods." + method.name + "().call().then((Result) => {\n" +
                 "            out.innerHTML = Result;})";
             caller.setAttribute("onclick", code);
         } else {
@@ -63,20 +104,12 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
             method.inputs.forEach(param => code += "document.getElementById(\""+method.name + "_"+param.name+"\").value,");
             if (method.inputs.length > 0)
                 code.slice(0, -1);
-            code += ").send({from:  document.getElementById(\"AddressInput\").value});";
+            code += ").send({from:  \"" + callerAddr + "\", gasPrice: 1});";
             caller.setAttribute("onclick", code);
         }
         elem.appendChild(caller);
 
-        document.getElementById("methods").appendChild(elem);
-    }
-
-    function updateLabel() {
-        let htmlLabel = document.getElementById('myLabel');
-
-        myContract.methods.retrieve().call().then((jsonRpcResult) => {
-            htmlLabel.innerHTML = jsonRpcResult;
-        });
+        container.appendChild(elem);
     }
 
     function showAccounts() {
@@ -108,7 +141,7 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
         });
     }
 
-    ABI.forEach(method => generateCaller(method));
+
     showAccounts();
 
 </script>
