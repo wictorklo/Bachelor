@@ -26,7 +26,7 @@ contract clb {
         uint256 pageNo;
         string ACReg;
         uint flightNo;
-        Date reportDate;
+        //Date reportDate;
         //Date actionDate;
         uint leg;
         string report;
@@ -36,9 +36,12 @@ contract clb {
         uint partNo;
         uint serialNo;
         string action;
+        uint day;
+        uint month;
+        uint year;
     }
 
-    function addCLB(string memory _ACReg, uint _flightNo, Date memory _reportDate, uint _leg, string memory _report, uint _IdNo) public {
+    function addCLB(string memory _ACReg, uint _flightNo, uint _leg, string memory _report, uint _IdNo, uint _day, uint _month, uint _year) public {
         /* require(_day<=31, "Not valid day");
          require(_month<=12, "Not valid month");
          require(_year>=1970 && _year<=currentYear, "Not valid year");
@@ -49,13 +52,13 @@ contract clb {
              }
          }*/
         incrementPageNo();
-        CLBs[pageNo] = CLB(0, _ACReg, _flightNo, _reportDate, _leg, _report, _IdNo, "", "", 0, 0, "");
+        CLBs[pageNo] = CLB(0, _ACReg, _flightNo, _leg, _report, _IdNo, "", "", 0, 0, "", _day, _month, _year);
     }
 
 
     function updateCLB(uint _pageNo, Date memory _reportDate, uint _IdNo, string memory _sta, string memory _nomenclature, uint _partNo, uint _serialNo, string memory _action) public{
         incrementPageNo();
-        CLBs[_pageNo].reportDate = _reportDate;
+        //CLBs[_pageNo].reportDate = _reportDate;
         CLBs[_pageNo].IdNo = _IdNo;
         CLBs[_pageNo].Sta = _sta;
         CLBs[_pageNo].nomenclature = _nomenclature;
