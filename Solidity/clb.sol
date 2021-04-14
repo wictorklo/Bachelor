@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "BokkyPooBahsDateTimeLibrary.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/AccessControl.sol";
+import "./Solidity/imports/BokkyPooBahsDateTimeLibrary.sol";
+//import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/AccessControl.sol";
 
 contract clb {
     using BokkyPooBahsDateTimeLibrary for uint;
