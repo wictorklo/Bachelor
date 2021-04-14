@@ -9,7 +9,7 @@ contract Adder {
         count -= number;
     }
 
-    function getCount() public view returns (int) {
+    function getCount() public view returns (int result) {
         return count;
     }
 }

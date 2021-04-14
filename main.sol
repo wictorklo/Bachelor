@@ -16,7 +16,7 @@ contract Main {
 
 
 
-    function getContracts() public view returns (Entry[] memory){
+    function getContracts() public view returns (Entry[] memory results){
         Entry[] memory entries = new Entry[](nContracts);
         for (uint i = 0; i < nContracts; i++){
             entries[i] = contracts[i];

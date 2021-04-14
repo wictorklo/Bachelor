@@ -34,13 +34,15 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
 
     const web3 = new Web3('http://localhost:8545');
 
-    const contractAddr = '0xECF130fA947585b3adB5297eac946f83bE9E8267';
-    const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_API","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"API","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct Main.Entry[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+    const contractAddr = "0x27A734E26C891f8897eEe94064bAedbe7387c245";
+    const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_API","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"API","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct Main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function"}];
     const myContract = new web3.eth.Contract(ABI, contractAddr);
 
     let callerAddr;
 
     let out = document.getElementById("out");
+
+    let contracts = {};
 
     function generateInput(methodName, varName, type) {
         let field = document.createElement("input");
@@ -54,8 +56,15 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
         web3.eth.personal.unlockAccount(document.getElementById("AddressInput").value, "", 0);
         callerAddr = document.getElementById("AddressInput").value;
         document.getElementById("methods").innerHTML = "";
-        myContract.methods.getContracts().call().then((Result) => {generateSections(Result)});
-        ABI.forEach(method => generateCaller(method, document.getElementById("methods")));
+        myContract.methods.getContracts().call().then((Result) => {
+            contracts["Main"]= {name: "Main", ABI: ABI, address: contractAddr};
+            console.log(Result);
+            Result.forEach(contract => {
+                contracts[contract[0]] = {name: contract[0], ABI: JSON.parse(contract[1]), address: contract[2]};
+            });
+            generateSections(Result);
+        });
+        ABI.forEach(method => generateCaller(method, document.getElementById("methods"), "Main"));
     }
 
     function generateSections(contracts){
@@ -70,6 +79,7 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
             caller.classList.add("collapsed");
             caller.setAttribute("role", "button");
             caller.setAttribute("onclick", "$('#"+contract[0]+"').collapse('toggle')");
+            caller.innerHTML = contract[0];
             panelHead.appendChild(caller);
             panel.appendChild(panelHead);
             let elem = document.createElement("div");
@@ -77,39 +87,48 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
             elem.id = contract[0];
             jsonABI = JSON.parse(contract[1]);
             console.log(elem.id + ": " + jsonABI);
-            jsonABI.forEach(method => generateCaller(method, elem));
+            jsonABI.forEach(method => generateCaller(method, elem, contract[0]));
             panel.appendChild(elem);
             outerMethods.appendChild(panel);
         })
 
     }
 
-    function generateCaller(method, container) {
+    function generateCaller(method, container, cname) {
         let elem = document.createElement("div");
         let text = method.name + ": ";
         elem.appendChild(document.createTextNode(text));
         method.inputs.forEach(param => elem.appendChild(generateInput(method.name, param.name, param.type)));
+        method.outputs.forEach(o => {
+            let out = document.createElement("label");
+            out.id = "OUT_"+method.name+"_"+cname;
+            elem.appendChild(out);
+        });
 
         let caller = document.createElement("input");
         caller.type = "button";
         caller.value = method.name;
-        if (method.stateMutability === "view") {
-            let out = document.createElement("label");
-            elem.appendChild(out);
-            let code = "myContract.methods." + method.name + "().call().then((Result) => {\n" +
-                "            out.innerHTML = Result;})";
-            caller.setAttribute("onclick", code);
-        } else {
-            let code = "myContract.methods." + method.name + "(";
-            method.inputs.forEach(param => code += "document.getElementById(\""+method.name + "_"+param.name+"\").value,");
-            if (method.inputs.length > 0)
-                code.slice(0, -1);
-            code += ").send({from:  \"" + callerAddr + "\", gasPrice: 1});";
-            caller.setAttribute("onclick", code);
-        }
+        caller.setAttribute("onclick", "callMethod('" + cname + "', '" + method.name + "');");
         elem.appendChild(caller);
 
         container.appendChild(elem);
+    }
+
+    function callMethod(cname, method){
+        let contract = contracts[cname];
+        let abi = contract.ABI;
+        let addr = contract.address;
+        let args = [];
+        let contr = new web3.eth.Contract(abi, addr);
+        abi.find(e => e.name === method).inputs.forEach(i => args.push(document.getElementById(method+"_"+i.name).value));
+        if (abi.find(e => e.name === method).stateMutability === "view"){
+            contr.methods[method].apply(null, args).call().then(Result => {
+                console.log("OUT_"+method+"_"+Result.name);
+                console.log(Result);
+                document.getElementById("OUT_"+method+"_"+cname).innerHTML = Result});
+        } else {
+            contr.methods[method].apply(null, args).send({from: callerAddr, gasPrice: 1});
+        }
     }
 
     function showAccounts() {
