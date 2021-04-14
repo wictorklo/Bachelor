@@ -1,4 +1,4 @@
-contract Adder {
+contract adder {
     int private count = 0;
 
     function increment(int number) public {

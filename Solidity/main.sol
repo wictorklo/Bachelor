@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-contract Main {
+contract main {
 
     struct Entry {
         string name;
