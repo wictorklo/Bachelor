@@ -7,9 +7,9 @@ import "./Solidity/imports/BokkyPooBahsDateTimeLibrary.sol";
 contract tlb {
     using BokkyPooBahsDateTimeLibrary for uint;
 
-    uint256 public pageNo = 0;
+    uint256 private pageNo = 0;
     enum MelCat {A, B, C, D, NA}
-    enum Category {DEFAULT, I, II, IIIA, IIIB}
+    enum Category {I, II, IIIA, IIIB}
     mapping(uint => TLB) public TLBs;
 
     struct Aircraft {
@@ -39,24 +39,24 @@ contract tlb {
 
     struct Report {
         string reports;
-        uint IdNo;
+        uint reportIdNo;
     }
 
     struct Action {
         string actions;
-        uint IdNo;
+        uint actionIdNo;
     }
 
     struct Status {
         bool Cdccl;
         bool FcsRepair;
         bool Rii;
-        MelCat[] MelCats;
+        MelCat MelCats;
         bool M;
         bool O;
         bool notifyDispatch;
         uint licenseNo;
-        uint256[3] actionDate;
+        Date actionDate;
     }
 
     struct PartNo {
@@ -82,12 +82,18 @@ contract tlb {
         uint minute;
     }
 
+    struct Date {
+        uint day;
+        uint month;
+        uint year;
+    }
+
     struct AllReportData{
         Aircraft aircraft;
         uint flightNo;
         string flightFrom;
         string flightTo;
-        uint256[3] reportDate;
+        Date reportDate;
         EngineOil engineOil;
         APU apu;
         HydFluid hydFluid;
@@ -95,81 +101,49 @@ contract tlb {
     }
 
     struct AllActionData{
-        uint256[3] actionDate;
+        Date actionDate;
         Action action;
         Status status;
         Parts parts;
-        Category[] category;
-        uint256[3] expiredDate;
+        Category category;
+        Date expiredDate;
         bool etopsFlight;
         FlightTime flightTime;
         string maintCheck;
         uint licenceNo;
         uint station;
         bool CaaCertification;
-        bool handlingAgent;
+        bool handlingAgent; //if this then certNo
         uint certNo;
     }
 
     struct TLB{
-        /* Aircraft aircraft;
-        uint flightNo;
-        string flightFrom;
-        string flightTo;
-        uint256[3] reportDate;
-        uint256[3] actionDate;
-        EngineOil engineOil;
-        APU apu;
-        HydFluid hydFluid;
-        Report report;
-        Action action;
-        Status status;
-        Parts parts;
-        Category[] category;
-        uint256[3] expiredDate;
-        bool EtopsFlight;
-        FlightTime flightTime;
-        string maintCheck;
-        uint licenseNo;
-        uint station;
-        bool CaaCertification;
-        bool handlingAgent; //If yes then CertNo
-        uint CertNo; */
-        //AllReportData allReportData;
+        AllReportData allReportData;
         AllActionData allActionData;
     }
 
-    function isValidDates(uint[3] memory _date) private pure returns (bool) {
-        if (BokkyPooBahsDateTimeLibrary.isValidDate(_date[2], _date[1], _date[0])) {
+    function isValidDates(Date memory _date) private pure returns (bool) {
+        if (BokkyPooBahsDateTimeLibrary.isValidDate(_date.year, _date.month, _date.day)) {
             return true;
         }
         else {
             return false;
         }
     }
-    /*
-    function addTLB(Aircraft memory _aircraft, uint _flightNo, string memory _flightFrom, string memory _flightTo, uint256[3] memory _reportDate,
-                    EngineOil memory _engineOil, APU memory _apu, HydFluid memory _hydFluid, Report memory _report) public {
+
+    function addTLB(AllReportData memory _allReportData) public {
+        require(isValidDates(_allReportData.reportDate), "Not valid report date");
+
+        AllActionData memory _allActionData;
+
+        TLBs[pageNo] = TLB(_allReportData, _allActionData);
         pageNo ++;
-        require(isValidDates(_reportDate), "Not valid date");
+    }
 
-        uint256[3] memory _actionDate;
-        Action memory _action;
-        Status memory _status;
-        Parts memory _parts;
-        FlightTime memory _flightTime;
-        uint256[3] memory _expiredDate;
-        Category _category = Category.DEFAULT;
-
-        TLBs[pageNo] = TLB(_aircraft, _flightNo, _flightFrom, _flightTo, _reportDate, _actionDate, _engineOil,
-        _apu, _hydFluid, _report, _action, _status, _parts, _category, _expiredDate, false, _flightTime, "", 0, 0, false, false, 0);
-    }*/
-
-    function updateTLB(AllActionData memory _allActionData) public{
-        //require(isValidDates(), "Not valid action date");
-        //require(isValidDates(_expiredDate), "Not valid expired date");
-        TLBs[pageNo]=TLB(_allActionData);
-
+    function updateTLB(uint _pageNo, AllActionData memory _allActionData) public{
+        require(isValidDates(_allActionData.actionDate), "Not valid action date");
+        require(isValidDates(_allActionData.expiredDate), "Not valid expired date");
+        TLBs[_pageNo].allActionData = _allActionData;
     }
 
 }
