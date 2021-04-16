@@ -6,7 +6,9 @@ const web3 = new Web3("http://localhost:8545");
 const bytecode = fs.readFileSync("./build/main_sol_Main.bin");
 const abi = JSON.parse(fs.readFileSync("./build/main_sol_Main.abi"));
 
-const SOURCES = ["main", "adder", "clb"];
+const SOURCES = ["main", "adder", "clb", "tlb"];
+
+
 
 //const src = fs.readFileSync(mainPath, "UTF-8");
 
@@ -42,6 +44,23 @@ var mainContract;
 var accounts;
 var myWalletAddress;
 
+function replaceData(newAddr, newABI) {
+    fs.readFile("index.html", 'utf8', function (err,data) {
+        if (err) {
+            return console.log(err);
+        }
+        var newData = data.replace(/const contractAddr = "0x[\dA-Za-z]+";/g, 'const contractAddr = "'+newAddr+'";');
+        newData = newData.replace(/const ABI = \[.+\];/g, 'const ABI = '+JSON.stringify(newABI)+';');
+
+        fs.writeFile("index_BACKUP.html", data, 'utf8', function (err) {
+            if (err) return console.log(err);
+        });
+        fs.writeFile("index.html", newData, 'utf8', function (err) {
+            if (err) return console.log(err);
+        });
+    });
+}
+
 (async function () {
     accounts = await web3.eth.getAccounts();
     myWalletAddress = accounts[0];
@@ -59,6 +78,7 @@ var myWalletAddress;
             mainContract = new web3.eth.Contract(contracts.main.main.abi, deployment.options.address);
             console.log(deployment.options.address);
             autoDeploy();
+            replaceData(deployment.options.address, contracts.main.main.abi);
         }).catch((err) => {
             console.error("Initial setup: " + err);
         })
