@@ -10,7 +10,7 @@ contract tlb {
     uint256 private pageNo = 0;
     enum MelCat {A, B, C, D, NA}
     enum Category {I, II, IIIA, IIIB}
-    mapping(uint => TLB) public TLBs;
+    mapping(uint => TLB) private TLBs;
 
     struct Aircraft {
         uint ACType;
@@ -129,6 +129,14 @@ contract tlb {
         else {
             return false;
         }
+    }
+
+    function getTLB() public view returns (TLB[] memory) {
+        TLB[] memory ret = new TLB[](pageNo);
+        for (uint i = 0; i < pageNo; i++) {
+            ret[i] = TLBs[i];
+        }
+        return ret;
     }
 
     function addTLB(AllReportData memory _allReportData) public {

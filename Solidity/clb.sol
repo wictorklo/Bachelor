@@ -12,7 +12,7 @@ contract clb {
 
     uint256 private pageNo = 0;
 
-    mapping(uint => CLB) public CLBs;
+    mapping(uint => CLB) private CLBs;
 
     struct Date {
         uint day;
