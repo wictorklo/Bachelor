@@ -51,6 +51,16 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
     }
 
     function login() {
+        document.getElementById("methods").innerHTML = "";
+        $.post("/login", {addr: document.getElementById("AddressInput").value}, (Result) => {
+            contracts["Main"] = {name: "Main", ABI: ABI, address: contractAddr};
+            Result.forEach(contract => {
+                contracts[contract[0]] = {name: contract[0], ABI: JSON.parse(contract[1]), address: contract[2]};
+            });
+            generateSections(Result);
+        });
+        ABI.forEach(method => generateCaller(method, document.getElementById("methods"), "Main"));
+        /*
         web3.eth.personal.unlockAccount(document.getElementById("AddressInput").value, "", 0);
         callerAddr = document.getElementById("AddressInput").value;
         document.getElementById("methods").innerHTML = "";
@@ -62,7 +72,7 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
             });
             generateSections(Result);
         });
-        ABI.forEach(method => generateCaller(method, document.getElementById("methods"), "Main"));
+        ABI.forEach(method => generateCaller(method, document.getElementById("methods"), "Main"));*/
     }
 
     function generateSections(contracts){
@@ -89,7 +99,6 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
             panel.appendChild(elem);
             outerMethods.appendChild(panel);
         })
-
     }
 
     function generateModal(method, cname) {

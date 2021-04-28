@@ -45,7 +45,7 @@ var accounts;
 var myWalletAddress;
 
 function replaceData(newAddr, newABI) {
-    fs.readFile("index.html", 'utf8', function (err,data) {
+    fs.readFile("public/index.html", 'utf8', function (err,data) {
         if (err) {
             return console.log(err);
         }
@@ -55,7 +55,7 @@ function replaceData(newAddr, newABI) {
         fs.writeFile("index_BACKUP.html", data, 'utf8', function (err) {
             if (err) return console.log(err);
         });
-        fs.writeFile("index.html", newData, 'utf8', function (err) {
+        fs.writeFile("public/index.html", newData, 'utf8', function (err) {
             if (err) return console.log(err);
         });
     });

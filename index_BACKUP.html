@@ -27,30 +27,6 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
     </table>
 </div>
 
-<!-- Trigger the modal with a button -->
-<button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal">Open Modal</button>
-
-<!-- Modal -->
-<div id="myModal" class="modal fade" role="dialog">
-    <div class="modal-dialog">
-
-        <!-- Modal content-->
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Modal Header</h4>
-            </div>
-            <div class="modal-body">
-                <p>Some text in the modal.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-
-    </div>
-</div>
-
 <br>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/web3@1.2.6/dist/web3.min.js"></script>
@@ -58,7 +34,7 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
 
     const web3 = new Web3('http://localhost:8545');
 
-    const contractAddr = "0x48b2f649afb35A466CEa46F0d33a36eB55684988";
+    const contractAddr = "0x6cf41854E40DD4ba01BF6522Fb179fD2f34D7f5e";
     const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_API","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x6c2bc72d"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"API","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"}];
     const myContract = new web3.eth.Contract(ABI, contractAddr);
 
@@ -185,6 +161,7 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
                 elem.appendChild(generateInput(cname+"_"+method.name, param.name, param.type));
             });
         }
+
         method.outputs.forEach(o => {
             let out = document.createElement("label");
             out.id = "OUT_"+method.name+"_"+cname;
