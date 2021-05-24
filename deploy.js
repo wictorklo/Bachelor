@@ -45,17 +45,17 @@ var accounts;
 var myWalletAddress;
 
 function replaceData(newAddr, newABI) {
-    fs.readFile("public/index.html", 'utf8', function (err,data) {
+    fs.readFile("server.js", 'utf8', function (err,data) {
         if (err) {
             return console.log(err);
         }
         var newData = data.replace(/const contractAddr = "0x[\dA-Za-z]+";/g, 'const contractAddr = "'+newAddr+'";');
         newData = newData.replace(/const ABI = \[.+\];/g, 'const ABI = '+JSON.stringify(newABI)+';');
 
-        fs.writeFile("index_BACKUP.html", data, 'utf8', function (err) {
+        /*fs.writeFile("index_BACKUP.html", data, 'utf8', function (err) {
             if (err) return console.log(err);
-        });
-        fs.writeFile("public/index.html", newData, 'utf8', function (err) {
+        });*/
+        fs.writeFile("server.js", newData, 'utf8', function (err) {
             if (err) return console.log(err);
         });
     });
@@ -64,9 +64,9 @@ function replaceData(newAddr, newABI) {
 (async function () {
     accounts = await web3.eth.getAccounts();
     myWalletAddress = accounts[0];
+    web3.eth.getBalance(myWalletAddress).then((res) => console.log(res));
 
     const myContract = new web3.eth.Contract(contracts.main.main.abi);
-    console.log(myContract);
 
     web3.eth.personal.unlockAccount(myWalletAddress, "", 10).then(() => {
         myContract.deploy({
@@ -86,7 +86,7 @@ function replaceData(newAddr, newABI) {
 })();
 
 async function autoDeploy () {
-
+    console.log("Main done. Deploying contracts...")
     try {
         await fs.readdir("./build", (err, files) => {
             SOURCES.forEach(name => {
@@ -102,7 +102,7 @@ async function autoDeploy () {
                         data: bc.toString()
                     }).send({
                         from: myWalletAddress,
-                        gas: 5000000
+                        gas: 50000000
                     }).then((deployment) => {
                         mainContract.methods.addContract(name, rawABI, deployment.options.address).send({
                             from: myWalletAddress,
@@ -115,6 +115,6 @@ async function autoDeploy () {
             });
         });
     } catch (err) {
-        console.error(err);
+        console.error("Deploy contract error (" + name + ") :" + err);
     }
 }

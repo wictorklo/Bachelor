@@ -1,0 +1,9 @@
+<div><%=method.name%>: </div>
+<% if (method.inputs.find(param => 'components' in param)) { %>
+    <%- include('methodModal', {cname: name, mname: method.name, method: method}); %>
+<% } else { %>
+    <input type="button" value="<%=method.name%>" onclick="console.log('clicked button');">
+    <% method.inputs.forEach(param => { %>
+        <input type="text" placeholder="<%=param.type%>: <%=param.name%>" id="<%= name+"_"+method.name + "_" + param.name %>">
+    <% });%>
+<% } %>
