@@ -2,6 +2,6 @@
     <% if ('components' in comp) { %>
         <%- include('structInput', {comps: comp.components, prefix: prefix+comp.name+"_"}); %>
     <% } else { %>
-        <input type="text" placeholder="<%=comp.type%>: <%=comp.name%>" id="<%= prefix + "_" + comp.name %>">
+        <input type="text" placeholder="<%=comp.type%>: <%=comp.name%>" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>">
     <% } %>
 <% });%>

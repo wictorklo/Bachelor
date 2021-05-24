@@ -68,15 +68,16 @@ Address to call from: <input type="text" id="AddressInput" value="0x0">
         }
     }
 
-    $('.callGetter').submit(function(event) {
+    $('.callMethod').submit(function(event) {
         let objData = {
-            name: $(this).attr("id"),
+            name: $(this).attr("id").substring(5), //Erase 'call_' prefix of ID
             data: $(this).serializeArray()
         };
         console.log(objData);
         $.post('/callMethod', objData,
             function(res) {
                 let localID = event.target.id;
+                console.log(res);
                 document.getElementById((localID+"_out").substring(5)).innerText = res; //Erase 'call_' prefix of ID
             }
         );

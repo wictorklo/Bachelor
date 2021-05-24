@@ -10,13 +10,15 @@ const contractAddr = "0x77CD8D53fcB26c1D9F69ed60E1b3cAf63D2F5199";
 const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_API","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x6c2bc72d"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"API","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"}];
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts = [];
+const mainAccount = "0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2";
 
-web3.eth.personal.unlockAccount("0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2", "", 0);
+web3.eth.personal.unlockAccount(mainAccount, "", 0);
 mainContract.methods.getContracts().call().then((Result) => {
     contracts["Main"]= {name: "Main", ABI: ABI, address: contractAddr};
     Result.forEach(contract => {
         contracts[contract[0]] = {name: contract[0], ABI: JSON.parse(contract[1]), address: contract[2]};
     });
+    web3.eth.personal.lockAccount(mainAccount)
 });
 //TODO: Get contract permissions
 
@@ -43,38 +45,41 @@ var con = mysql.createConnection({
 });
 con.connect();
 
+function structVals (comps, prefix, params) {
+    let inputs = [];
+    comps.forEach( comp => {
+        if ('components' in comp){
+            inputs.push(structVals(comp.components, prefix+"_"+comp.name, params));
+        } else {
+            inputs.push(params[prefix+"_"+comp.name]);
+        }
+    } );
+    return inputs;
+}
 
-function callMethod(cname, method, arguments){
+async function callMethod(from, cname, method, params){
     let contract = contracts[cname];
     let abi = contract.ABI;
     let addr = contract.address;
-    let args = [];
     let contr = new web3.eth.Contract(abi, addr);
     let meth = abi.find(e => e.name === method);
-    if (meth.inputs.find(e => 'components' in e)){
-        args = structVals(meth.inputs, cname+"_"+method+"_");
-        console.log(args);
+    console.log(params);
+    let args = structVals(meth.inputs, cname+"_"+method, params);
+    console.log(args);
+    if (meth.stateMutability === "view" || method.stateMutability === "pure"){
+        let result = "";
+        await contr.methods[method].apply(null, args).call().then( (response) => {
+            console.log("Pure result:", result);
+            result = response;
+        });
+        return result;
     } else {
-        meth.inputs.forEach(i => args.push(document.getElementById(method + "_" + i.name).value));
+        let result = "";
+        await contr.methods[method].apply(null, args).send({from: from}).then( (response) => {
+            result = "Success!";
+        });
+        return result;
     }
-    if (abi.find(e => e.name === method).stateMutability === "view"){
-        contr.methods[method].apply(null, args).call().then(Result => {
-            console.log("OUT_"+method+"_"+Result.name);
-            console.log(Result);
-            document.getElementById("OUT_"+method+"_"+cname).innerHTML = Result});
-    } else {
-        contr.methods[method].apply(null, args).send({from: callerAddr, gasPrice: 1});
-    }
-}
-
-
-
-
-function getContracts(address){
-    let contrs = [];
-    contrs["test1"] = {name: "TestContract", ABI: [{name: "testMethod", type: "out"}, {name: "testMethod2", type: "out"}]};
-    contrs["test2"] = {name: "TestContract2", ABI: [{name: "testMethod21", type: "out"}, {name: "testMethod22", type: "out"}]};
-    return contrs;
 }
 
 
@@ -115,15 +120,25 @@ app.get("/logout", (req, res) => {
 });
 
 app.post("/callMethod", urlencodedParser, (req, res) => {
-    console.log(req.body);
-    let decoded = decodeURIComponent(req.body.data);
-    console.log(decoded);
-    res.send("Response!");
+    let target = req.body.name.split("_");
+    let params = {};
+    if (req.body.data !== undefined)
+        req.body.data.forEach(elem => params[elem.name] = elem.value);
+    //if (req.session.uid !== undefined)
+    web3.eth.personal.unlockAccount(req.session.address, "", 10).then(() => {
+        console.log("Account unlocked:", req.session.address);
+        callMethod(req.session.address, target[0], target[1], params).then((result) => {
+            console.log(result);
+            res.send(result);
+        });
+    });
 });
 
+
 app.get("/", (req, res) => {
-    if (true || req.session.uid !== undefined) {
-        res.render("index", {userAddress: req.session.uid, contracts: contracts}, (err, html) => {if (err) {console.log(err);} res.send(html)});
+    if (req.session.uid !== undefined) {
+        console.log(req.session.uid, "has logged on");
+        res.render("index", {userAddress: req.session.address, contracts: contracts}, (err, html) => {if (err) {console.log(err);} res.send(html)});
     } else {
         res.render("login", (err, html) => res.send(html));
     }
