@@ -4,4 +4,7 @@
 /Ethereum/node_modules/
 /Ethereum/build/
 /SimNetwork/.vagrant/
+/SimNetwork/.vagrant/*/*
+/Blockchain/geth/*/*
 /Blockchain/geth/
+/Solidity/node_modules/
