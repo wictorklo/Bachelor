@@ -1,2 +1,7 @@
 /.idea/
 /node_modules/
+/Website/node_modules/
+/Ethereum/node_modules/
+/Ethereum/build/
+/SimNetwork/.vagrant/
+/Blockchain/geth/

@@ -1,1 +1,0 @@
-geth console --datadir=. --networkid 30000 --port 8545 --http --http.port 8545 --http.corsdomain "*" --http.api "eth,web3,personal" --allow-insecure-unlock
