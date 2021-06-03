@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: SPDX-License UNLICENSED
 
-pragma solidity ^0.8.0;
 
-import "./Solidity/imports/BokkyPooBahsDateTimeLibrary.sol";
+//////////// get function //////////
+
+pragma solidity ^0.8.0;
+pragma experimental ABIEncoderV2;
+
+import "BokkyPooBahsDateTimeLibrary.sol";
 
 contract tlb {
     using BokkyPooBahsDateTimeLibrary for uint;
 
+    uint nTLBs = 0;
     uint256 private pageNo = 0;
     enum MelCat {A, B, C, D, NA}
     enum Category {I, II, IIIA, IIIB}
@@ -113,13 +118,14 @@ contract tlb {
         uint licenceNo;
         uint station;
         bool CaaCertification;
-        bool handlingAgent; //if this then certNo
-        uint certNo;
     }
 
     struct TLB{
         AllReportData allReportData;
         AllActionData allActionData;
+        address employeeReportSignature;
+        address employeeActionSignature;
+        address managerSignature;
     }
 
     function isValidDates(Date memory _date) private pure returns (bool) {
@@ -131,20 +137,12 @@ contract tlb {
         }
     }
 
-    function getTLB() public view returns (TLB[] memory) {
-        TLB[] memory ret = new TLB[](pageNo);
-        for (uint i = 0; i < pageNo; i++) {
-            ret[i] = TLBs[i];
-        }
-        return ret;
-    }
-
     function addTLB(AllReportData memory _allReportData) public {
         require(isValidDates(_allReportData.reportDate), "Not valid report date");
 
         AllActionData memory _allActionData;
 
-        TLBs[pageNo] = TLB(_allReportData, _allActionData);
+        TLBs[pageNo] = TLB(_allReportData, _allActionData, msg.sender, address(0), address(0));
         pageNo ++;
     }
 
@@ -152,6 +150,36 @@ contract tlb {
         require(isValidDates(_allActionData.actionDate), "Not valid action date");
         require(isValidDates(_allActionData.expiredDate), "Not valid expired date");
         TLBs[_pageNo].allActionData = _allActionData;
+        TLBs[_pageNo].employeeActionSignature = msg.sender;
     }
 
+    function getTLB() public view returns (TLB[] memory)  {
+        TLB[] memory ret = new TLB[](pageNo);
+        for (uint i = 0; i < pageNo; i++) {
+            ret[i] = TLBs[i];
+        }
+        return ret;
+    }
+
+    function getUnsignedData() public view returns(TLB[] memory){ //modifier
+        TLB[] memory Tlbs = new TLB[](nTLBs);
+        TLB[] memory tlbs = getTLB();
+        for (uint i = 0; i < nTLBs; i++) {
+            if (tlbs[i].managerSignature == address(0)) {
+                Tlbs[i] = TLBs[i];
+            }
+        }
+        return Tlbs;
+    }
+
+    function getSignedData() public view returns(TLB[] memory){
+        TLB[] memory Tlbs = new TLB[](nTLBs);
+        TLB[] memory tlbs = getTLB();
+        for (uint i = 0; i< nTLBs; i++) {
+            if (tlbs[i].managerSignature != address(0)) { // and valid address
+                Tlbs[i] = TLBs[i];
+            }
+        }
+        return Tlbs;
+    }
 }
