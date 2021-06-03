@@ -1,0 +1,13 @@
+<div><%=method.name%>: <br>
+    <form class="callMethod" id="call_<%= name + "_" + method.name %>" action="/callMethod" method="post">
+        <% if (method.inputs.find(param => 'components' in param)) { %>
+            <%- include('methodModal', {cname: name, mname: method.name, method: method}); %>
+        <% } else { %>
+            <input type="submit" value="<%=method.name%>" onclick="console.log('clicked button');">
+            <% method.inputs.forEach(param => { %>
+                <input type="text" placeholder="<%=param.type%>: <%=param.name%>" id="<%= name+"_"+method.name + "_" + param.name %>" name="<%= name+"_"+method.name + "_" + param.name %>">
+            <% }); %>
+        <% } %>
+    </form>
+    <label id="<%=name + "_" + method.name + "_out"%>"> </label>
+</div>

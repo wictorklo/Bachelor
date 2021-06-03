@@ -2,10 +2,10 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-import "./Permissions.sol";
+import "../PermissionManager.sol";
 
 contract Permissioned {
-    Permissions private pm;
+    PermissionManager private pm;
 
     address private owner;
 
@@ -18,12 +18,16 @@ contract Permissioned {
         _;
     }
 
+    function getAdmin(address addr) public view returns (bool) {
+        return pm.getAdmin(addr);
+    }
+
     function setPM(address addr) public onlyOwner() {
-        pm = Permissions(addr);
+        pm = PermissionManager(addr);
     }
 
     modifier isAdmin {
-        require(pm.getAdmin(msg.sender), "You are not admin");
+        require(msg.sender == owner ||pm.getAdmin(msg.sender), "You are not admin");
         _;
     }
 }

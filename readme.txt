@@ -10,3 +10,11 @@ Start blockchain på port 8545 TODO rework struktur så det er nemmere
 Start sql server
 'node server.js' for at starte hjemmesiden
 forbind i en browser på 'localhost:8080'
+
+TODO på hjemmeside:
+- Datatyper
+- CSS
+- Fejlhåndtering
+
+TODO på solidity:
+- Generér signatur på TLB/CLP approval

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <meta charset="UTF-8">
+    <title>FlightChain</title>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <script src="js/popper.min.js"></script>
+</head>
+<body>
+<h1>FlightChain(tm)</h1>
+Address to call from: <input type="text" id="AddressInput" value="0x0">
+<input type="button" value="Log In" onclick="login()" />
+<br />
+<div class="panel-group" role="tablist" aria-multiselectable="true" id="methods"></div>
+<div id="accounts">
+    <table id="accounts-list" class="table table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Account</th>
+                <th scope="col">Balance</th>
+            </tr>
+        </thead>
+        <tbody id="account-body"></tbody>
+    </table>
+</div>
+
+<br>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/web3@1.2.6/dist/web3.min.js"></script>
+<script>
+
+    const web3 = new Web3('http://localhost:8545');
+
+    const contractAddr = "0x6cf41854E40DD4ba01BF6522Fb179fD2f34D7f5e";
+    const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_API","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x6c2bc72d"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"API","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"}];
+    const myContract = new web3.eth.Contract(ABI, contractAddr);
+
+    let callerAddr;
+
+    let contracts = {};
+
+    function generateInput(methodName, varName, type) {
+        let field = document.createElement("input");
+        field.type = "text";
+        field.placeholder = type + ": " + varName;
+        field.id = methodName + "_" + varName;
+        return field;
+    }
+
+    function login() {
+        web3.eth.personal.unlockAccount(document.getElementById("AddressInput").value, "", 0);
+        callerAddr = document.getElementById("AddressInput").value;
+        document.getElementById("methods").innerHTML = "";
+        myContract.methods.getContracts().call().then((Result) => {
+            contracts["Main"]= {name: "Main", ABI: ABI, address: contractAddr};
+            console.log(Result);
+            Result.forEach(contract => {
+                contracts[contract[0]] = {name: contract[0], ABI: JSON.parse(contract[1]), address: contract[2]};
+            });
+            generateSections(Result);
+        });
+        ABI.forEach(method => generateCaller(method, document.getElementById("methods"), "Main"));
+    }
+
+    function generateSections(contracts){
+        let outerMethods = document.getElementById("methods");
+        contracts.forEach(contract => {
+            let panel = document.createElement("div");
+            panel.classList.add("collapsed", "panel", "panel-default");
+            let panelHead = document.createElement("div");
+            panelHead.classList.add("panel-heading");
+            panelHead.setAttribute("role", "tab");
+            let caller = document.createElement("a");
+            caller.classList.add("collapsed");
+            caller.setAttribute("role", "button");
+            caller.setAttribute("onclick", "$('#"+contract[0]+"').collapse('toggle')");
+            caller.innerHTML = contract[0];
+            panelHead.appendChild(caller);
+            panel.appendChild(panelHead);
+            let elem = document.createElement("div");
+            elem.classList.add("collapse");
+            elem.id = contract[0];
+            jsonABI = JSON.parse(contract[1]);
+            console.log(elem.id + ": " + jsonABI);
+            jsonABI.forEach(method => generateCaller(method, elem, contract[0]));
+            panel.appendChild(elem);
+            outerMethods.appendChild(panel);
+        })
+
+    }
+
+    function generateModal(method, cname) {
+        let elem = document.createElement("div");
+        let dial = document.createElement("div");
+        let cont = document.createElement("div");
+        let head = document.createElement("div");
+        let body = document.createElement("div");
+        let foot = document.createElement("div");
+        elem.id = "modal_"+cname+"_"+method.name;
+        elem.classList.add("modal", "fade");
+        elem.setAttribute("role", "dialog");
+        elem.innerHTML = "test";
+        dial.classList.add("modal-dialog");
+        cont.classList.add("modal-content");
+        head.classList.add("modal-header");
+        let closeButton = document.createElement("button");
+        closeButton.type = "button";
+        closeButton.classList.add("close");
+        closeButton.setAttribute("onclick", "$('#modal_" + cname + "_" + method.name + "').modal('hide');");
+        closeButton.innerHTML = "&times";
+        let modalTitle = document.createElement("h4");
+        modalTitle.classList.add("modal-title");
+        modalTitle.innerHTML = cname + ": "+method.name;
+        head.appendChild(closeButton);
+        head.appendChild(modalTitle);
+
+        cont.appendChild(head);
+        body.classList.add("modal-body");
+        let inputFields = structInput(method.inputs, cname+"_"+method.name+"_");
+        inputFields.forEach(I => {
+            cont.appendChild(I);
+        });
+
+        cont.appendChild(body);
+        foot.classList.add("modal-footer");
+        let submitButton = document.createElement("button");
+        submitButton.setAttribute("onclick", "callMethod('" + cname + "', '" + method.name + "');; $('#modal_" + cname + "_" + method.name + "').modal('hide');");
+        submitButton.classList.add("btn", "btn-default");
+        submitButton.type = "button";
+        submitButton.innerHTML = "SUBMIT";
+        foot.appendChild(submitButton);
+
+        cont.appendChild(foot);
+        dial.appendChild(cont);
+        elem.appendChild(dial);
+        let caller = document.createElement("input");
+        caller.type = "button";
+        caller.value = method.name;
+        caller.setAttribute("onclick", "$('#modal_" + cname + "_" + method.name + "').modal('show');");
+        return [caller, elem];
+    }
+
+    function generateCaller(method, container, cname) {
+        let elem = document.createElement("div");
+        let text = method.name + ": ";
+        elem.appendChild(document.createTextNode(text));
+        if (method.inputs.find(param => 'components' in param)) {
+            let modalCaller = generateModal(method, cname);
+            elem.appendChild(modalCaller[0]);
+            elem.appendChild(modalCaller[1]);
+        } else {
+            let caller = document.createElement("input");
+            caller.type = "button";
+            caller.value = method.name;
+            caller.setAttribute("onclick", "callMethod('" + cname + "', '" + method.name + "');");
+            elem.appendChild(caller);
+            method.inputs.forEach(param => {
+                elem.appendChild(generateInput(cname+"_"+method.name, param.name, param.type));
+            });
+        }
+
+        method.outputs.forEach(o => {
+            let out = document.createElement("label");
+            out.id = "OUT_"+method.name+"_"+cname;
+            elem.appendChild(out);
+        });
+
+        container.appendChild(elem);
+    }
+
+    function structInput (comps, prefix) {
+        let inputs = [];
+        comps.forEach( comp => {
+            if ('components' in comp){
+                console.log(prefix+comp.name);
+                inputs = inputs.concat(structInput(comp.components, prefix+comp.name+"_"));
+            } else {
+                inputs.push(generateInput(prefix, comp.name, comp.type));
+            }
+        } );
+        return inputs;
+    }
+
+    function structVals (comps, prefix) {
+        let inputs = [];
+        comps.forEach( comp => {
+            if ('components' in comp){
+                inputs.push(structVals(comp.components, prefix+comp.name+"_"));
+            } else {
+                inputs.push(document.getElementById(prefix+"_"+comp.name).value);
+            }
+        } );
+        return inputs;
+    }
+
+
+
+    function callMethod(cname, method){
+        let contract = contracts[cname];
+        let abi = contract.ABI;
+        let addr = contract.address;
+        let args = [];
+        let contr = new web3.eth.Contract(abi, addr);
+        let meth = abi.find(e => e.name === method);
+        if (meth.inputs.find(e => 'components' in e)){
+            args = structVals(meth.inputs, cname+"_"+method+"_");
+            console.log(args);
+        } else {
+            meth.inputs.forEach(i => args.push(document.getElementById(method + "_" + i.name).value));
+        }
+        if (abi.find(e => e.name === method).stateMutability === "view"){
+            contr.methods[method].apply(null, args).call().then(Result => {
+                console.log("OUT_"+method+"_"+Result.name);
+                console.log(Result);
+                document.getElementById("OUT_"+method+"_"+cname).innerHTML = Result});
+        } else {
+            contr.methods[method].apply(null, args).send({from: callerAddr, gasPrice: 1});
+        }
+    }
+
+    function showAccounts() {
+        web3.eth.getAccounts().then(function (accounts) {
+            console.log(accounts);
+            let elem = document.createElement("tbody");
+            elem.id = "accounts-list";
+            elem.className = "list-group";
+            for (acc in accounts) {
+                let accountElem = document.createElement("tr");
+                let counter = document.createElement("th");
+                counter.scope = "row";
+                counter.innerHTML = acc;
+                accountElem.appendChild(counter);
+                let name = document.createElement("td");
+                name.innerHTML = accounts[acc];
+                accountElem.appendChild(name);
+                let balance = document.createElement("td");
+                web3.eth.getBalance(accounts[acc]).then(function (result) {
+                    balance.innerHTML = result;
+                });
+                accountElem.appendChild(balance);
+                elem.appendChild(accountElem);
+            }
+            let outer = document.getElementById('accounts-list');
+            let elems = document.getElementById("account-body");
+            elems.remove();
+            outer.appendChild(elem);
+        });
+    }
+
+
+    showAccounts();
+
+</script>
+</html>

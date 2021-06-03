@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SQL Demo</title>
+</head>
+<body>
+<iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
+<form id="register" action="register" target="dummyframe" method="post">
+    <h2>REGISTER</h2>
+    <label for="email">Email:</label>
+    <input type="text" id="r_email" name="email"><br>
+    <label for="password">Password:</label>
+    <input type="password" id="r_password" name="password"><br>
+    <input type="reset" onclick="document.forms['register'].submit();" value="Register">
+</form>
+
+<form id="login" action="/login" method="post">
+    <h2>Log In</h2>
+    <label for="email">Email:</label>
+    <input type="text" id="l_email" name="email"><br>
+    <label for="password">Password:</label>
+    <input type="password" id="l_password" name="password"><br>
+    <input type="submit" value="Log in">
+</form>
+</body>
+</html>

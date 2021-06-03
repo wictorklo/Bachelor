@@ -1,1 +1,1 @@
-sudo route del default && sudo route add default gw 10.0.10.101
+sudo route add -net 192.168.1.0 netmask 255.255.255.0 gw 10.0.10.101 eth1

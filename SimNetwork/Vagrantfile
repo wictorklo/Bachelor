@@ -1,6 +1,7 @@
 Vagrant.configure("2") do |config|
 
   config.vm.provision "shell", path: "init_master.sh"
+  config.vm.synced_folder "./../", "/home/vagrant/common/"
 
   config.vm.provider "virtualbox" do |vb|
     vb.memory = 1024
@@ -10,13 +11,21 @@ Vagrant.configure("2") do |config|
   end
 
 
-  config.vm.define "gateway" do |gateway|
-    gateway.vm.box = "ubuntu/trusty64"
-    gateway.vm.hostname = "gateway"
-    gateway.vm.network :private_network, ip: "10.0.10.101", virtualbox__intnet: "netA"
-    gateway.vm.network :private_network, ip: "192.168.1.101", virtualbox__intnet: "netB"
-    gateway.vm.synced_folder "../", "/home/vagrant/common/"
-    gateway.vm.provision "shell", path: "init_gateway.sh"
+  config.vm.define "serverA" do |sa|
+    sa.vm.box = "ubuntu/trusty64"
+    sa.vm.hostname = "serverA"
+    sa.vm.network :private_network, ip: "10.0.10.101", virtualbox__intnet: "netA"
+    sa.vm.network :private_network, ip: "192.168.2.101", virtualbox__intnet: "public"
+    sa.vm.provision "shell", path: "init_serverA.sh"
+  end
+  
+
+  config.vm.define "serverB" do |sb|
+    sb.vm.box = "ubuntu/trusty64"
+    sb.vm.hostname = "serverB"
+    sb.vm.network :private_network, ip: "192.168.1.101", virtualbox__intnet: "netB"
+    sb.vm.network :private_network, ip: "192.168.2.102", virtualbox__intnet: "public"
+    sb.vm.provision "shell", path: "init_serverB.sh"
   end
 
 	
@@ -24,48 +33,42 @@ Vagrant.configure("2") do |config|
     alice.vm.box = "ubuntu/trusty64"
     alice.vm.hostname = "Alice"
     alice.vm.network :private_network, ip: "10.0.10.103", virtualbox__intnet: "netA"
-    alice.vm.synced_folder "../", "/home/vagrant/common/"
-	alice.vm.provision "shell", path: "init_compA.sh"
+	  alice.vm.provision "shell", path: "init_compA.sh"
   end
 
   config.vm.define "Bob" do |bob|
     bob.vm.box = "ubuntu/trusty64"
     bob.vm.hostname = "Bob"
     bob.vm.network :private_network, ip: "10.0.10.104", virtualbox__intnet: "netA"
-    bob.vm.synced_folder "../", "/home/vagrant/common/"
-  bob.vm.provision "shell", path: "init_compA.sh"
+    bob.vm.provision "shell", path: "init_compA.sh"
   end
 
   config.vm.define "Charlie" do |charlie|
     charlie.vm.box = "ubuntu/trusty64"
     charlie.vm.hostname = "Charlie"
     charlie.vm.network :private_network, ip: "10.0.10.105", virtualbox__intnet: "netA"
-    charlie.vm.synced_folder "../", "/home/vagrant/common/"
-  charlie.vm.provision "shell", path: "init_compA.sh"
+    charlie.vm.provision "shell", path: "init_compA.sh"
   end
 
   config.vm.define "David" do |david|
     david.vm.box = "ubuntu/trusty64"
     david.vm.hostname = "David"
     david.vm.network :private_network, ip: "192.168.1.103", virtualbox__intnet: "netB"
-    david.vm.synced_folder "../", "/home/vagrant/common/"
-  david.vm.provision "shell", path: "init_compB.sh"
+    david.vm.provision "shell", path: "init_compB.sh"
   end
 
   config.vm.define "Eve" do |eve|
     eve.vm.box = "ubuntu/trusty64"
     eve.vm.hostname = "Eve"
     eve.vm.network :private_network, ip: "192.168.1.104", virtualbox__intnet: "netB"
-    eve.vm.synced_folder "../", "/home/vagrant/common/"
-  eve.vm.provision "shell", path: "init_compB.sh"
+    eve.vm.provision "shell", path: "init_compB.sh"
   end
 
   config.vm.define "Frank" do |frank|
     frank.vm.box = "ubuntu/trusty64"
     frank.vm.hostname = "Frank"
     frank.vm.network :private_network, ip: "192.168.1.105", virtualbox__intnet: "netB"
-    frank.vm.synced_folder "../", "/home/vagrant/common/"
-  frank.vm.provision "shell", path: "init_compB.sh"
+    frank.vm.provision "shell", path: "init_compB.sh"
   end
 
 end

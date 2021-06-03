@@ -6,7 +6,7 @@ pragma solidity >=0.7.0 <0.9.0;
  * @title Storage
  * @dev Store & retrieve value in a variable
  */
-contract Permissions {
+contract PermissionManager {
     address owner;
     mapping(address => bool) private isAdmin;
 
@@ -21,7 +21,7 @@ contract Permissions {
         isAdmin[msg.sender] = true;
     }
 
-    function setAdmin(address a) public onlyAdmin {
+    function setAdmin(address a) public payable onlyAdmin {
         isAdmin[a] = true;
     }
 

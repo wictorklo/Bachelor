@@ -6,7 +6,7 @@ const web3 = new Web3("http://localhost:8545");
 const bytecode = fs.readFileSync("./build/main_sol_Main.bin");
 const abi = JSON.parse(fs.readFileSync("./build/main_sol_Main.abi"));
 
-const SOURCES = ["main", "adder", "clb", "tlb"];
+const SOURCES = ["main", "adder", "clb"];
 
 
 
@@ -55,8 +55,8 @@ function replaceData(newAddr, newABI) {
         /*fs.writeFile("index_BACKUP.html", data, 'utf8', function (err) {
             if (err) return console.log(err);
         });*/
-        fs.writeFile("server.js", newData, 'utf8', function (err) {
-            if (err) return console.log(err);
+        fs.writeFile("../Website/server.js", newData, 'utf8', function (err) {
+            if (err) return console.log("ReplaceData error: " + err);
         });
     });
 }

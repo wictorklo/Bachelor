@@ -4,7 +4,7 @@ contract main {
 
     struct Entry {
         string name;
-        string API;
+        string ABI;
         string addr;
     }
 
@@ -24,8 +24,8 @@ contract main {
         return entries;
     }
 
-    function addContract(string memory _name, string memory _API, string memory _addr) public {
-        contracts[nContracts] = Entry(_name, _API, _addr);
+    function addContract(string memory _name, string memory _ABI, string memory _addr) public {
+        contracts[nContracts] = Entry(_name, _ABI, _addr);
         nContracts++;
     }
 

@@ -1,0 +1,21 @@
+<input type="button" value="<%=mname%>" onclick="$('#modal_<%=cname + "_" + mname %>').modal('show');">
+
+<div id="modal_<%=cname + "_" + mname%>" class="modal fade" role="dialog"> <!-- elem -->
+    <div class="modal-dialog"> <!-- dial -->
+        <div class="modal-content"> <!-- cont -->
+            <div class="modal-header"> <!-- head -->
+                <button type="button" class="close" onclick="$('#modal_<%=cname + "_" + mname %>').modal('hide');">&times</button>
+                <h4 class="modal-title">
+                    <%= cname + ": " + mname %>
+                </h4>
+            </div> <!-- /head -->
+            <div class="modal-body"> <!-- body -->
+                <%- include('structInput', {comps: method.inputs, prefix: cname+"_"+mname+"_"}); %>
+            </div> <!-- /body -->
+            <div class="modal-footer">
+                <button class="btn btn-default" type="submit" onclick="console.log('SUBMIT'); $('#modal_<%=cname + "_" + mname %>').modal('hide');">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
