@@ -1,1 +1,1 @@
-geth console --unlock 0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2 --miner.etherbase=0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2 --mine --datadir=. --networkid 30000 --port 8545 --http --http.port 8545 --http.corsdomain "*" --http.api "eth,web3,personal" --allow-insecure-unlock
+geth --unlock 0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2 --password "pw" --miner.etherbase=0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2 --mine --datadir=. --networkid 30000 --http --http.port 8545 --http.corsdomain "*" --http.api "eth,web3,personal" --allow-insecure-unlock
