@@ -12,5 +12,14 @@ echo "solidity folder copied"
 mkdir Blockchain
 cp -R /home/vagrant/common/Blockchain/* /home/vagrant/Blockchain
 echo "blockchain folder copied"
-sudo screen -S geth -d -m bash -c "cd Blockchain; sudo ./boot_miner.bat"
-sudo screen -S website -d -m bash -c "cd Website; node server.js"
+cd Blockchain
+sudo rm -rf geth/
+sudo ./init.bat
+sudo screen -S geth -d -m bash -c "sudo ./boot_miner.bat"
+sleep 5
+printf "admin.addPeer(\"enode://" | sudo tee startup.js
+cat /home/vagrant/common/Blockchain/enodeA.txt | tr -d "\n" | sudo tee -a startup.js
+printf "\");\n" | sudo tee -a startup.js
+geth attach --datadir=. --exec "loadScript(\"./startup.js\")"
+cd ..
+sudo screen -S website -d -m bash -c "sleep 5; cd Website; node server.js"

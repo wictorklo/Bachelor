@@ -95,7 +95,7 @@ app.post("/register", urlencodedParser, function (req, res) {
 
 
 app.post("/login", urlencodedParser, function (req, res) {
-    let query = "SELECT id, address FROM accounts WHERE email = '" + req.body.email + "' AND pass = '" + req.body.password + "' LIMIT 1;";
+    let query = "SELECT id, address FROM accounts WHERE email = '" + req.body.email + "' AND password = '" + req.body.password + "' LIMIT 1;";
     con.query(query, (err, result) => {
         if (result === undefined) {
             res.write("Invalid email or password");
@@ -144,6 +144,14 @@ app.get("/", (req, res) => {
     }
 });
 
+con.query("SELECT * FROM accounts;", (err, result) => {
+    if (result === undefined) {
+        console.log(err);
+        console.log("Invalid email or password");
+    } else {
+        console.log(result);
+    }
+});
 
 
 app.listen(8080);

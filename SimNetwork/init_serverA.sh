@@ -12,3 +12,11 @@ echo "solidity folder copied"
 mkdir Blockchain
 cp -R /home/vagrant/common/Blockchain/* /home/vagrant/Blockchain
 echo "blockchain folder copied"
+cd Blockchain
+sudo rm -rf geth/
+sudo ./init.bat
+sudo bootnode -nodekey geth/nodekey -writeaddress | sudo tee /home/vagrant/common/Blockchain/enodeA.txt
+printf "@192.168.2.101:30303" | sudo tee -a /home/vagrant/common/Blockchain/enodeA.txt
+sudo screen -S geth -d -m bash -c "sudo ./boot_miner.bat"
+cd ..
+sudo screen -S website -d -m bash -c "sleep 10; cd Solidity; sudo node deploy.js; cd ../Website; node server.js"

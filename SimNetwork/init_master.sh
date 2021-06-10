@@ -6,5 +6,9 @@ sudo apt-get install ethereum nodejs-legacy npm git mysql-server-5.5 mysql-serve
 npm config set strict-ssl false
 sudo npm install -g n
 sudo n stable
+sudo fallocate -l 4G ~/.swapfile
+sudo chmod 600 ~/.swapfile
+sudo mkswap ~/.swapfile
+sudo swapon ~/.swapfile
 PATH="$PATH"
 mysql -u root -proot < /home/vagrant/common/SimNetwork/database.sql
