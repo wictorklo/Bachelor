@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 import "../PermissionManager.sol";
 
 contract Permissioned {
-    PermissionManager private pm;
+    PermissionManager public pm;
 
     address private owner;
 
