@@ -1,7 +1,26 @@
-<% comps.forEach( comp => {%>
+<% comps.forEach( (comp) => {%>
     <% if ('components' in comp) { %>
-        <%- include('structInput', {comps: comp.components, prefix: prefix+comp.name+"_"}); %>
-    <% } else { %>
-        <input type="text" placeholder="<%=comp.type%>: <%=comp.name%>" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><%= comp.name %></h5>
+                <%- include('structInput', {comps: comp.components, prefix: prefix+comp.name+"_"}) %>
+            </div>
+        </div>
+    <% } else {
+         switch(comp.type) {
+            case "bool": %>
+                <%= comp.name %>:
+                <input type="hidden" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>" value="false">
+                <input type="checkbox" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>"> <br>
+                <% break;
+            case "uint":
+            case "int": %>
+                <%= comp.name %>:
+                <input type="number" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>">
+                <% break;
+            default: %>
+                <input type="text" placeholder="<%=comp.type%>: <%=comp.name%>" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>">
+                <% break; %>
+        <% } %>
     <% } %>
-<% });%>
+<% }) %>

@@ -1,0 +1,10 @@
+<% if (typeof results == 'object' && Symbol.iterator in Object(results)) {
+    let counter = 0;
+    results.forEach( (result) => {
+        counter += 1; %>
+        <%- include("renderModal", {result: result, name: name+"-"+counter}); %>
+        <% console.log(name + "-" + counter); %>
+    <% }); %>
+<% } else { %>
+    <%= results %>
+<% } %>

@@ -16,7 +16,7 @@
 <br />
 <div class="panel-group" role="tablist" aria-multiselectable="true" id="methods">
 <% Object.values(contracts).forEach( (contract) => { %>
-    <%- include('contract', {name: contract.name, methods: contract.ABI}); %>
+        <%- include('contract', {name: contract.name, methods: contract.ABI}); %>
 <% }); %>
 </div>
 
@@ -76,7 +76,7 @@
             function(res) {
                 let localID = event.target.id;
                 console.log(res);
-                document.getElementById((localID+"_out").substring(5)).innerText = res; //Erase 'call_' prefix of ID
+                document.getElementById((localID+"_out").substring(5)).innerHTML = res; //Erase 'call_' prefix of ID
             }
         );
         return false;

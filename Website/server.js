@@ -6,7 +6,7 @@ const Web3 = require("web3");
 const mysql = require("mysql");
 
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0x6cf41854E40DD4ba01BF6522Fb179fD2f34D7f5e";
+const contractAddr = "0x6b30dEA66357D77f80F15b90793259566DD9EbB8";
 const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x6c2bc72d"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"}];
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts = [];
@@ -68,8 +68,7 @@ async function callMethod(from, cname, method, params){
     console.log(args);
     if (meth.stateMutability === "view" || method.stateMutability === "pure"){
         let result = "";
-        await contr.methods[method].apply(null, args).call().then( (response) => {
-            console.log("Pure result:", result);
+        await contr.methods[method].apply(null, args).call().then( async (response) => {
             result = response;
         });
         return result;
@@ -128,8 +127,10 @@ app.post("/callMethod", urlencodedParser, (req, res) => {
     web3.eth.personal.unlockAccount(req.session.address, "", 10).then(() => {
         console.log("Account unlocked:", req.session.address);
         callMethod(req.session.address, target[0], target[1], params).then((result) => {
-            console.log(result);
-            res.send(result);
+            //console.log(result);
+            res.render("renderOutput", {results: result, name: target[0]+"_"+target[1]+"_render"}, (err, html) => {if (err) {console.log(err);} res.send(html)});
+            //res.send(result);
+            //res.render("login", (err, html) => res.send(html));
         });
     });
 });
