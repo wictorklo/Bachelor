@@ -7,7 +7,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "./Solidity/imports/BokkyPooBahsDateTimeLibrary.sol";
-import "Permissioned.sol";
+import "./Solidity/imports/Permissioned.sol";
 
 contract tlb is Permissioned{
     using BokkyPooBahsDateTimeLibrary for uint;

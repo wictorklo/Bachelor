@@ -1,12 +1,13 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
 const session = require('express-session');
 const Web3 = require("web3");
 const mysql = require("mysql");
 
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0x6b30dEA66357D77f80F15b90793259566DD9EbB8";
+const contractAddr = "0xdaa0CcF8E608541573Be254Db6c069bbeC9469E5";
 const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x6c2bc72d"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"}];
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts = [];
@@ -44,6 +45,8 @@ var con = mysql.createConnection({
     database: "Bachelor"
 });
 con.connect();
+
+
 
 function structVals (comps, prefix, params) {
     let inputs = [];
@@ -85,27 +88,44 @@ async function callMethod(from, cname, method, params){
 
 app.post("/register", urlencodedParser, function (req, res) {
     res.write("success!");
-    let query = "INSERT INTO accounts (email, pass, address) VALUES ('" + req.body.email + "', '" + req.body.password + "', 0);";
-    con.query(query, (err, result) => console.log(result + ", " + err));
-    res.send();
+    let hashed = "";
+    bcrypt.genSalt(5, function(err, salt) {
+        bcrypt.hash(req.body.password, salt, function(err, hash) {
+            let query = "INSERT INTO accounts (email, pass, address) VALUES ('" + req.body.email + "', '" + hash + "', 0);";
+            con.query(query, (err, result) => console.log(result + ", " + err));
+            res.send();
+        })
+    });
+
 
 
 });
 
 
 app.post("/login", urlencodedParser, function (req, res) {
-    let query = "SELECT id, address FROM accounts WHERE email = '" + req.body.email + "' AND password = '" + req.body.password + "' LIMIT 1;";
+    let hashed = "";
+    bcrypt.genSalt(5, function(err, salt) {
+        bcrypt.hash(req.body.password, salt, function(err, hash) {
+            hashed = hash;
+        })
+    });
+
+    let query = "SELECT pass, id, address FROM accounts WHERE email = '" + req.body.email + "' LIMIT 1;";
     con.query(query, (err, result) => {
         if (result === undefined) {
             res.write("Invalid email or password");
             res.send();
             return;
         }
-        req.session.uid = result[0].id;
-        req.session.address = result[0].address;
-        res.cookie("uid", result[0].id, {signed: true, secret: "super secret secret"});
-        res.redirect("/");
-        res.send();
+        let hashed = result[0].pass;
+        bcrypt.compare(req.body.password, hashed).then( function(valid) {
+            console.log(valid);
+            req.session.uid = result[0].id;
+            req.session.address = result[0].address;
+            res.cookie("uid", result[0].id, {signed: true, secret: "super secret secret"});
+            res.redirect("/");
+            res.send();
+        });
     });
 
 });
