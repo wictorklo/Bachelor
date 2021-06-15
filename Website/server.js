@@ -1,13 +1,14 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
 const session = require('express-session');
 const Web3 = require("web3");
 const mysql = require("mysql");
 
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0x6cf41854E40DD4ba01BF6522Fb179fD2f34D7f5e";
-const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x6c2bc72d"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"getAdmin","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function","constant":true,"signature":"0x64efb22b"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
+const contractAddr = "0xdaa0CcF8E608541573Be254Db6c069bbeC9469E5";
+const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x6c2bc72d"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"}];
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts = [];
 const mainAccount = "0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2";
@@ -45,7 +46,7 @@ var con = mysql.createConnection({
 });
 con.connect();
 
-function structVals(comps, prefix, params) {
+function structVals (comps, prefix, params) {
     let inputs = [];
     comps.forEach(comp => {
         if ('components' in comp) {
@@ -98,11 +99,15 @@ async function getValidContracts(address) {
 }
 
 app.post("/register", urlencodedParser, function (req, res) {
+    res.write("success!");
     if (validateEmail(req.body.email)) {
-        let query = "INSERT INTO accounts (email, pass, address) VALUES ('" + req.body.email + "', '" + req.body.password + "', 0);";
-        con.query(query, (err, result) => console.log(result + ", " + err));
-        res.write("success!");
-        res.send();
+        bcrypt.genSalt(5, function(err, salt) {
+            bcrypt.hash(req.body.password, salt, function(err, hash) {
+                let query = "INSERT INTO accounts (email, pass, address) VALUES ('" + req.body.email + "', '" + hash + "', 0);";
+                con.query(query, (err, result) => console.log(result + ", " + err));
+                res.send();
+            })
+        });
     } else {
         res.write("Email is not valid");
         res.send();
@@ -113,21 +118,23 @@ app.post("/register", urlencodedParser, function (req, res) {
 
 
 app.post("/login", urlencodedParser, function (req, res) {
-    let query = "SELECT id, address FROM accounts WHERE email = '" + req.body.email + "' AND password = '" + req.body.password + "' LIMIT 1;";
-    console.log("Querying...");
+    let query = "SELECT password, id, address FROM accounts WHERE email = '" + req.body.email + "' LIMIT 1;";
     con.query(query, (err, result) => {
+        console.log("Query complete");
         if (result === undefined) {
             res.write("Invalid email or password");
             res.send();
             return;
         }
-        console.log("Query complete");
-        req.session.uid = result[0].id;
-        req.session.address = result[0].address;
-        res.cookie("uid", result[0].id, {signed: true, secret: "super secret secret"}).send();
-        res.redirect("/");
+        let pass = result[0].password;
+        bcrypt.compare(req.body.password, pass).then( function(valid) {
+            console.log(valid);
+            req.session.uid = result[0].id;
+            req.session.address = result[0].address;
+            res.cookie("uid", result[0].id, {signed: true, secret: "super secret secret"});
+            res.redirect("/");
+        });
     });
-
 });
 
 app.get("/logout", (req, res) => {
@@ -167,7 +174,6 @@ app.post("/callMethod", urlencodedParser, (req, res) => {
 
 app.get("/", (req, res) => {
     if (req.session.uid !== undefined) {
-        console.log(req.session.uid);
         console.log(req.session.uid, "has logged on");
         //getValidContracts(req.session.address);
         res.render("index", {userAddress: req.session.address, contracts: contracts}, (err, html) => {

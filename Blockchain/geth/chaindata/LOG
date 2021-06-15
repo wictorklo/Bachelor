@@ -60,3 +60,36 @@
 16:33:08.134953 db@open done T·25.6639ms
 16:43:22.710206 db@close closing
 16:43:22.710206 db@close done T·0s
+=============== Jun 11, 2021 (CEST) ===============
+10:47:49.767135 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+10:47:49.768719 CURRENT: missing target file: MANIFEST-000014
+10:47:49.769020 CURRENT.bak: missing target file: MANIFEST-000011
+=============== Jun 11, 2021 (CEST) ===============
+10:47:49.770022 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+10:47:49.770022 table@recovery F·3
+10:47:49.770022 table@recovery recovering @2
+10:47:49.771018 table@recovery recovered @2 Gk·20 Ck·0 Cb·0 S·1334 Q·20
+10:47:49.771018 table@recovery recovering @7
+10:47:49.771018 table@recovery recovered @7 Gk·24 Ck·0 Cb·0 S·1596 Q·27
+10:47:49.771018 table@recovery recovering @8
+10:47:49.772386 table@recovery recovered @8 Gk·25 Ck·0 Cb·0 S·1631 Q·28
+10:47:49.772386 table@recovery recovered F·3 N·69 Gk·69 Ck·0 Q·28
+10:47:49.783705 version@stat F·[3] S·4KiB[4KiB] Sc·[0.75]
+10:47:49.787695 db@open opening
+10:47:49.787695 journal@recovery F·1
+10:47:49.792409 journal@recovery recovering @5
+10:47:49.797895 memdb@flush created L0@10 N·242 S·36KiB "\x024\b..\xf2\x19W,v188":"\xfcC\xb9..\x03\x86\xc3,v130"
+10:47:49.800336 version@stat F·[4] S·41KiB[41KiB] Sc·[1.00]
+10:47:49.803396 db@janitor F·7 G·1
+10:47:49.803396 db@janitor removing manifest-4
+10:47:49.803917 db@open done T·16.2224ms
+10:47:49.804444 table@compaction L0·4 -> L1·0 S·41KiB Q·270
+10:47:49.817286 table@build created L1@12 N·239 S·37KiB "\x024\b..\xf2\x19W,v188":"\xff\xe7\x02..\xaf\x015,v10"
+10:47:49.817286 version@stat F·[0 1] S·37KiB[0B 37KiB] Sc·[0.00 0.00]
+10:47:49.819593 table@compaction committed F-3 S-3KiB Ke·0 D·72 T·15.149ms
+10:47:49.822719 table@remove removed @10
+10:47:49.823223 table@remove removed @8
+10:47:49.823347 table@remove removed @7
+10:47:49.823347 table@remove removed @2
+12:44:56.742299 db@close closing
+12:44:56.742299 db@close done T·0s
