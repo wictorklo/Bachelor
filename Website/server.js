@@ -14,8 +14,8 @@ let contracts = [];
 const mainAccount = "0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2";
 
 web3.eth.personal.unlockAccount(mainAccount, "", 0);
-mainContract.methods.getContracts().call().then((Result) => {
-    contracts["Main"]= {name: "Main", ABI: ABI, address: contractAddr};
+mainContract.methods.getContracts().call({from: mainAccount}).then((Result) => {
+    contracts["Main"] = {name: "Main", ABI: ABI, address: contractAddr};
     Result.forEach(contract => {
         contracts[contract[0]] = {name: contract[0], ABI: JSON.parse(contract[1]), address: contract[2]};
     });
@@ -46,96 +46,104 @@ var con = mysql.createConnection({
 });
 con.connect();
 
-
-
 function structVals (comps, prefix, params) {
     let inputs = [];
-    comps.forEach( comp => {
-        if ('components' in comp){
-            inputs.push(structVals(comp.components, prefix+"_"+comp.name, params));
+    comps.forEach(comp => {
+        if ('components' in comp) {
+            inputs.push(structVals(comp.components, prefix + "_" + comp.name, params));
         } else {
-            inputs.push(params[prefix+"_"+comp.name]);
+            inputs.push(params[prefix + "_" + comp.name]);
         }
-    } );
+    });
     return inputs;
 }
 
-async function callMethod(from, cname, method, params){
+async function callMethod(from, cname, method, params) {
     let contract = contracts[cname];
     let abi = contract.ABI;
     let addr = contract.address;
     let contr = new web3.eth.Contract(abi, addr);
     let meth = abi.find(e => e.name === method);
-    console.log(params);
-    let args = structVals(meth.inputs, cname+"_"+method, params);
-    console.log(args);
-    if (meth.stateMutability === "view" || method.stateMutability === "pure"){
-        let result = "";
-        await contr.methods[method].apply(null, args).call().then( async (response) => {
+    let args = structVals(meth.inputs, cname + "_" + method, params);
+    if (meth.stateMutability === "view" || method.stateMutability === "pure") {
+        let result;
+        await contr.methods[method].apply(null, args).call({from: from}).then(async (response) => {
             result = response;
         });
         return result;
     } else {
-        let result = "";
-        await contr.methods[method].apply(null, args).send({from: from}).then( (response) => {
+        let result;
+        await contr.methods[method].apply(null, args).send({from: from}).then((response) => {
             result = "Success!";
         });
         return result;
     }
 }
 
+function validateEmail(email) {
+    const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
+}
 
+async function getValidContracts(address) {
+    let result;
+    let abi = contracts["PermissionManager"].ABI;
+    let addr = contracts["PermissionManager"].address;
+    let contr = new web3.eth.Contract(abi, addr);
+
+    await contr.methods["getPermissions"](address).call({from: mainAccount}).then((response) => {
+        result = response;
+    });
+    console.log(result);
+    return result;
+}
 
 app.post("/register", urlencodedParser, function (req, res) {
     res.write("success!");
-    let hashed = "";
-    bcrypt.genSalt(5, function(err, salt) {
-        bcrypt.hash(req.body.password, salt, function(err, hash) {
-            let query = "INSERT INTO accounts (email, pass, address) VALUES ('" + req.body.email + "', '" + hash + "', 0);";
-            con.query(query, (err, result) => console.log(result + ", " + err));
-            res.send();
-        })
-    });
-
+    if (validateEmail(req.body.email)) {
+        bcrypt.genSalt(5, function(err, salt) {
+            bcrypt.hash(req.body.password, salt, function(err, hash) {
+                let query = "INSERT INTO accounts (email, pass, address) VALUES ('" + req.body.email + "', '" + hash + "', 0);";
+                con.query(query, (err, result) => console.log(result + ", " + err));
+                res.send();
+            })
+        });
+    } else {
+        res.write("Email is not valid");
+        res.send();
+    }
 
 
 });
 
 
 app.post("/login", urlencodedParser, function (req, res) {
-    let hashed = "";
-    bcrypt.genSalt(5, function(err, salt) {
-        bcrypt.hash(req.body.password, salt, function(err, hash) {
-            hashed = hash;
-        })
-    });
-
-    let query = "SELECT pass, id, address FROM accounts WHERE email = '" + req.body.email + "' LIMIT 1;";
+    let query = "SELECT password, id, address FROM accounts WHERE email = '" + req.body.email + "' LIMIT 1;";
     con.query(query, (err, result) => {
+        console.log("Query complete");
         if (result === undefined) {
             res.write("Invalid email or password");
             res.send();
             return;
         }
-        let hashed = result[0].pass;
-        bcrypt.compare(req.body.password, hashed).then( function(valid) {
+        let pass = result[0].password;
+        bcrypt.compare(req.body.password, pass).then( function(valid) {
             console.log(valid);
             req.session.uid = result[0].id;
             req.session.address = result[0].address;
             res.cookie("uid", result[0].id, {signed: true, secret: "super secret secret"});
             res.redirect("/");
-            res.send();
         });
     });
-
 });
 
 app.get("/logout", (req, res) => {
-    res.cookie("uid", {maxAge: 0});
-    if (res.session !== undefined)
-        res.session.destroy();
+    res.clearCookie("uid");
+    if (req.session !== undefined) {
+        req.session.destroy();
+    }
+    console.log(res.session);
     res.redirect("/");
-    res.send();
 });
 
 app.post("/callMethod", urlencodedParser, (req, res) => {
@@ -148,7 +156,15 @@ app.post("/callMethod", urlencodedParser, (req, res) => {
         console.log("Account unlocked:", req.session.address);
         callMethod(req.session.address, target[0], target[1], params).then((result) => {
             //console.log(result);
-            res.render("renderOutput", {results: result, name: target[0]+"_"+target[1]+"_render"}, (err, html) => {if (err) {console.log(err);} res.send(html)});
+            res.render("renderOutput", {
+                results: result,
+                name: target[0] + "_" + target[1] + "_render"
+            }, (err, html) => {
+                if (err) {
+                    console.log(err);
+                }
+                res.send(html)
+            });
             //res.send(result);
             //res.render("login", (err, html) => res.send(html));
         });
@@ -159,20 +175,17 @@ app.post("/callMethod", urlencodedParser, (req, res) => {
 app.get("/", (req, res) => {
     if (req.session.uid !== undefined) {
         console.log(req.session.uid, "has logged on");
-        res.render("index", {userAddress: req.session.address, contracts: contracts}, (err, html) => {if (err) {console.log(err);} res.send(html)});
+        //getValidContracts(req.session.address);
+        res.render("index", {userAddress: req.session.address, contracts: contracts}, (err, html) => {
+            console.log("html generated");
+            if (err) {
+                console.log(err);
+            }
+            res.send(html)
+        });
     } else {
         res.render("login", (err, html) => res.send(html));
     }
 });
-
-con.query("SELECT * FROM accounts;", (err, result) => {
-    if (result === undefined) {
-        console.log(err);
-        console.log("Invalid email or password");
-    } else {
-        console.log(result);
-    }
-});
-
 
 app.listen(8080);

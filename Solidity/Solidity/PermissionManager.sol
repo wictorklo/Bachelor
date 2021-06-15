@@ -7,26 +7,45 @@ pragma solidity ^0.8.0;
  * @dev Store & retrieve value in a variable
  */
 contract PermissionManager {
-    address owner;
+    address payable owner;
+
     mapping(address => bool) private isAdmin;
-    mapping(address => mapping(string => bool)) private certification;
+    mapping(address => mapping(uint => string)) private permissions;
+    mapping(address => uint) private nPermissions;
 
     modifier onlyAdmin {
-        require(isAdmin[msg.sender] || msg.sender == owner);
+        require(isAdmin[msg.sender] || msg.sender == address(owner), "You are not admin");
         _;
     }
 
     constructor() {
-        owner = msg.sender;
+        owner = payable(msg.sender);
         isAdmin[msg.sender] = true;
     }
 
     function addAccountCert(address account, string memory permission) public onlyAdmin {
-        certification[account][permission] = true;
+        uint nPerms = nPermissions[account];
+        permissions[account][nPerms] = permission;
+        nPermissions[account]++;
     }
 
     function accountHasCert(address account, string memory permission) public view returns (bool) {
-        return certification[account][permission];
+        uint nPerms = nPermissions[account];
+        for (uint i = 0; i < nPerms; i++){
+            if (keccak256(bytes(permissions[account][i])) == keccak256(bytes(permission))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function getPermissions(address account) public view onlyAdmin returns (string[] memory) {
+        uint nPerms = nPermissions[account];
+        string[] memory perms = new string[](nPerms);
+        for (uint i = 0; i < nPerms; i++){
+            perms[i] = permissions[account][i];
+        }
+        return perms;
     }
 
     function setAdmin(address a) public payable onlyAdmin {
@@ -40,6 +59,10 @@ contract PermissionManager {
 
     function getAdmin(address a) public view returns (bool) {
         return isAdmin[a];
+    }
+
+    function kill() public onlyAdmin {
+        selfdestruct(payable(address(owner)));
     }
 
 }

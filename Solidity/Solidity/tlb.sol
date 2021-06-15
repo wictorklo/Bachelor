@@ -180,11 +180,14 @@ contract tlb is Permissioned{
     }
 
     function getUnsignedData() public view onlyCert returns(TLB[] memory){
+        uint count = 0;
         TLB[] memory Tlbs = new TLB[](nTLBs);
         TLB[] memory tlbs = getTLB();
         for (uint i = 0; i < nTLBs; i++) {
             if (tlbs[i].certReportSignature == address(0) || tlbs[i].certActionSignature == address(0)) {
                 Tlbs[i] = TLBs[i];
+                Tlbs[count] = tlbs[i];
+                count++;
             }
         }
         return Tlbs;

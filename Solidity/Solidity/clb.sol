@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "BokkyPooBahsDateTimeLibrary.sol";
-import "Permissioned.sol";
+import "./Solidity/imports/BokkyPooBahsDateTimeLibrary.sol";
+import "./Solidity/imports/Permissioned.sol";
 
 contract clb is Permissioned {
     using BokkyPooBahsDateTimeLibrary for uint;
