@@ -7,8 +7,8 @@ const Web3 = require("web3");
 const mysql = require("mysql");
 
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0xdaa0CcF8E608541573Be254Db6c069bbeC9469E5";
-const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x6c2bc72d"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"}];
+const contractAddr = "0x7D9D170be5Adb7D6052066575c38fbA19E5594c1";
+const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x6c2bc72d"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"getAdmin","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function","constant":true,"signature":"0x64efb22b"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts = [];
 const mainAccount = "0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2";
@@ -128,11 +128,15 @@ app.post("/login", urlencodedParser, function (req, res) {
         }
         let pass = result[0].password;
         bcrypt.compare(req.body.password, pass).then( function(valid) {
-            console.log(valid);
-            req.session.uid = result[0].id;
-            req.session.address = result[0].address;
-            res.cookie("uid", result[0].id, {signed: true, secret: "super secret secret"});
-            res.redirect("/");
+            if (valid) {
+                req.session.uid = result[0].id;
+                req.session.address = result[0].address;
+                res.cookie("uid", result[0].id, {signed: true, secret: "super secret secret"});
+                res.redirect("/");
+            } else {
+                res.write("Invalid email or password");
+                res.send();
+            }
         });
     });
 });
