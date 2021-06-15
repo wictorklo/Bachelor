@@ -6,7 +6,7 @@ const web3 = new Web3("http://localhost:8545");
 const bytecode = fs.readFileSync("./build/main_sol_Main.bin");
 const abi = JSON.parse(fs.readFileSync("./build/main_sol_Main.abi"));
 
-const SOURCES = ["main", "adder", "tlb"];
+const SOURCES = ["main", "PermissionManager", "adder", "tlb", "clb"];
 
 
 
@@ -25,7 +25,9 @@ let input = {
     },
 };
 
-SOURCES.forEach(src => input.sources[src] = {content: fs.readFileSync("./Solidity/"+src+".sol", "UTF-8")});
+SOURCES.forEach(src =>
+    input.sources[src] = {content: fs.readFileSync("./Solidity/"+src+".sol", "UTF-8")}
+    );
 
 function findImports(path) {
     return {
@@ -40,9 +42,10 @@ const contracts = output.contracts;
 
 
 
-var mainContract;
-var accounts;
-var myWalletAddress;
+let mainContract;
+let accounts;
+let myWalletAddress;
+let PMAddress;
 
 function replaceData(newAddr, newABI) {
     fs.readFile("../Website/server.js", 'utf8', function (err,data) {
@@ -59,6 +62,20 @@ function replaceData(newAddr, newABI) {
             if (err) return console.log("ReplaceData error: " + err);
         });
     });
+    fs.readFile("testData.js", 'utf8', function (err,data) {
+        if (err) {
+            return console.log(err);
+        }
+        var newData = data.replace(/const contractAddr = "0x[\dA-Za-z]+";/g, 'const contractAddr = "'+newAddr+'";');
+        newData = newData.replace(/const ABI = \[.+\];/g, 'const ABI = '+JSON.stringify(newABI)+';');
+
+        /*fs.writeFile("index_BACKUP.html", data, 'utf8', function (err) {
+            if (err) return console.log(err);
+        });*/
+        fs.writeFile("testData.js", newData, 'utf8', function (err) {
+            if (err) return console.log("ReplaceData error: " + err);
+        });
+    });
 }
 
 (async function () {
@@ -67,6 +84,7 @@ function replaceData(newAddr, newABI) {
     web3.eth.getBalance(myWalletAddress).then((res) => console.log(res));
 
     const myContract = new web3.eth.Contract(contracts.main.main.abi);
+    const PMContract = new web3.eth.Contract(contracts.PermissionManager.PermissionManager.abi);
 
     web3.eth.personal.unlockAccount(myWalletAddress, "", 10).then(() => {
         myContract.deploy({
@@ -74,11 +92,39 @@ function replaceData(newAddr, newABI) {
         }).send({
             from: myWalletAddress,
             gas: 5000000
-        }).then((deployment) => {
-            mainContract = new web3.eth.Contract(contracts.main.main.abi, deployment.options.address);
-            console.log(deployment.options.address);
-            autoDeploy();
-            replaceData(deployment.options.address, contracts.main.main.abi);
+        }).then((mainDeployment) => {
+            PMContract.deploy({
+                data: contracts.PermissionManager.PermissionManager.evm.bytecode.object.toString()
+            }).send({
+                from: myWalletAddress,
+                gas: 5000000
+            }).then((PMDeployment) => {
+                PMAddress = PMDeployment.options.address;
+                mainContract = new web3.eth.Contract(contracts.main.main.abi, mainDeployment.options.address);
+                mainContract.methods.setPM(PMAddress).send({
+                    from: myWalletAddress,
+                    gasPrice: 1
+                });
+                mainContract.methods.addContract("PermissionManager", JSON.stringify(contracts.PermissionManager.PermissionManager.abi), PMDeployment.options.address).send({
+                    from: myWalletAddress,
+                    gasPrice: 1
+                });
+                console.log(mainDeployment.options.address);
+                autoDeploy();
+                replaceData(mainDeployment.options.address, contracts.main.main.abi);
+            }).then(() => {
+                let contr = new web3.eth.Contract(contracts.PermissionManager.PermissionManager.abi, PMAddress);
+                let ADMINS = ["0x91dDFdB4BD66427eCDB4025f987E0FC682A487EB"];
+                let ADMINPERMS = ["adder.increment"];
+                let CERTS = [];
+                let CERTPERMS = [];
+                let WORKER = [];
+                ADMINS.forEach((addr) => {
+                    ADMINPERMS.forEach((perm) => {
+                        contr.methods.addAccountCert(addr, perm).send({from: myWalletAddress});
+                    })
+                })
+            })
         }).catch((err) => {
             console.error("Initial setup: " + err);
         })
@@ -86,11 +132,11 @@ function replaceData(newAddr, newABI) {
 })();
 
 async function autoDeploy () {
-    console.log("Main done. Deploying contracts...")
+    console.log("Main and PM done. Deploying contracts...");
     try {
         await fs.readdir("./build", (err, files) => {
             SOURCES.forEach(name => {
-                if (name === "main")
+                if (name === "main" || name === "PermissionManager")
                     return;
 
                 let bc = contracts[name][name].evm.bytecode.object;
@@ -108,6 +154,11 @@ async function autoDeploy () {
                             from: myWalletAddress,
                             gasPrice: 1
                         });
+                        let newContract = new web3.eth.Contract(ABI, deployment.options.address);
+                        newContract.methods.setPM(PMAddress).send({
+                            from: myWalletAddress,
+                            gasPrice: 1
+                        });
                     }).catch((err) => {
                         console.error("DeployError: " + err);
                     })
@@ -119,780 +170,3 @@ async function autoDeploy () {
     }
 }
 
-
-tlb, [{
-    "inputs": [{
-        "components": [{
-            "components": [{
-                "internalType": "uint256",
-                "name": "ACType",
-                "type": "uint256"
-            }, {"internalType": "uint256", "name": "ACNo", "type": "uint256"}],
-            "internalType": "struct tlb.Aircraft",
-            "name": "aircraft",
-            "type": "tuple"
-        }, {"internalType": "uint256", "name": "flightNo", "type": "uint256"}, {
-            "internalType": "string",
-            "name": "flightFrom",
-            "type": "string"
-        }, {"internalType": "string", "name": "flightTo", "type": "string"}, {
-            "components": [{
-                "internalType": "uint256",
-                "name": "day",
-                "type": "uint256"
-            }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                "internalType": "uint256",
-                "name": "year",
-                "type": "uint256"
-            }], "internalType": "struct tlb.Date", "name": "reportDate", "type": "tuple"
-        }, {
-            "components": [{
-                "internalType": "uint256",
-                "name": "engineNo",
-                "type": "uint256"
-            }, {"internalType": "uint256", "name": "addedQts", "type": "uint256"}, {
-                "internalType": "string",
-                "name": "finalQts",
-                "type": "string"
-            }], "internalType": "struct tlb.EngineOil", "name": "engineOil", "type": "tuple"
-        }, {
-            "components": [{
-                "internalType": "uint256",
-                "name": "addedOil",
-                "type": "uint256"
-            }, {"internalType": "string", "name": "finalOil", "type": "string"}, {
-                "internalType": "uint256",
-                "name": "hour",
-                "type": "uint256"
-            }, {"internalType": "uint256", "name": "cycles", "type": "uint256"}],
-            "internalType": "struct tlb.APU",
-            "name": "apu",
-            "type": "tuple"
-        }, {
-            "components": [{"internalType": "uint256", "name": "Sys1BL", "type": "uint256"}, {
-                "internalType": "uint256",
-                "name": "Sys2GC",
-                "type": "uint256"
-            }, {"internalType": "uint256", "name": "Sys3YR", "type": "uint256"}, {
-                "internalType": "uint256",
-                "name": "Sys4",
-                "type": "uint256"
-            }], "internalType": "struct tlb.HydFluid", "name": "hydFluid", "type": "tuple"
-        }, {
-            "components": [{"internalType": "string", "name": "reports", "type": "string"}, {
-                "internalType": "uint256",
-                "name": "reportIdNo",
-                "type": "uint256"
-            }], "internalType": "struct tlb.Report", "name": "report", "type": "tuple"
-        }], "internalType": "struct tlb.AllReportData", "name": "_allReportData", "type": "tuple"
-    }], "name": "addTLB", "outputs": [], "stateMutability": "nonpayable", "type": "function"
-}, {
-    "inputs": [], "name": "getSignedData", "outputs": [{
-        "components": [{
-            "components": [{
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "ACType",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "ACNo", "type": "uint256"}],
-                "internalType": "struct tlb.Aircraft",
-                "name": "aircraft",
-                "type": "tuple"
-            }, {"internalType": "uint256", "name": "flightNo", "type": "uint256"}, {
-                "internalType": "string",
-                "name": "flightFrom",
-                "type": "string"
-            }, {
-                "internalType": "string",
-                "name": "flightTo",
-                "type": "string"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "day",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "year",
-                    "type": "uint256"
-                }], "internalType": "struct tlb.Date", "name": "reportDate", "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "engineNo",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "addedQts", "type": "uint256"}, {
-                    "internalType": "string",
-                    "name": "finalQts",
-                    "type": "string"
-                }], "internalType": "struct tlb.EngineOil", "name": "engineOil", "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "addedOil",
-                    "type": "uint256"
-                }, {"internalType": "string", "name": "finalOil", "type": "string"}, {
-                    "internalType": "uint256",
-                    "name": "hour",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "cycles", "type": "uint256"}],
-                "internalType": "struct tlb.APU",
-                "name": "apu",
-                "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "Sys1BL",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "Sys2GC", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "Sys3YR",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "Sys4", "type": "uint256"}],
-                "internalType": "struct tlb.HydFluid",
-                "name": "hydFluid",
-                "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "string",
-                    "name": "reports",
-                    "type": "string"
-                }, {"internalType": "uint256", "name": "reportIdNo", "type": "uint256"}],
-                "internalType": "struct tlb.Report",
-                "name": "report",
-                "type": "tuple"
-            }], "internalType": "struct tlb.AllReportData", "name": "allReportData", "type": "tuple"
-        }, {
-            "components": [{
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "day",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "year",
-                    "type": "uint256"
-                }], "internalType": "struct tlb.Date", "name": "actionDate", "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "string",
-                    "name": "actions",
-                    "type": "string"
-                }, {"internalType": "uint256", "name": "actionIdNo", "type": "uint256"}],
-                "internalType": "struct tlb.Action",
-                "name": "action",
-                "type": "tuple"
-            }, {
-                "components": [{"internalType": "bool", "name": "Cdccl", "type": "bool"}, {
-                    "internalType": "bool",
-                    "name": "FcsRepair",
-                    "type": "bool"
-                }, {"internalType": "bool", "name": "Rii", "type": "bool"}, {
-                    "internalType": "enum tlb.MelCat",
-                    "name": "MelCats",
-                    "type": "uint8"
-                }, {"internalType": "bool", "name": "M", "type": "bool"}, {
-                    "internalType": "bool",
-                    "name": "O",
-                    "type": "bool"
-                }, {"internalType": "bool", "name": "notifyDispatch", "type": "bool"}, {
-                    "internalType": "uint256",
-                    "name": "licenseNo",
-                    "type": "uint256"
-                }, {
-                    "components": [{
-                        "internalType": "uint256",
-                        "name": "day",
-                        "type": "uint256"
-                    }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                        "internalType": "uint256",
-                        "name": "year",
-                        "type": "uint256"
-                    }], "internalType": "struct tlb.Date", "name": "actionDate", "type": "tuple"
-                }], "internalType": "struct tlb.Status", "name": "status", "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "item",
-                    "type": "uint256"
-                }, {"internalType": "string", "name": "nomenclature", "type": "string"}, {
-                    "internalType": "uint256",
-                    "name": "posistion",
-                    "type": "uint256"
-                }, {
-                    "components": [{
-                        "internalType": "uint256",
-                        "name": "partOff",
-                        "type": "uint256"
-                    }, {"internalType": "uint256", "name": "partOn", "type": "uint256"}],
-                    "internalType": "struct tlb.PartNo",
-                    "name": "partNo",
-                    "type": "tuple"
-                }, {
-                    "components": [{
-                        "internalType": "uint256",
-                        "name": "serialOff",
-                        "type": "uint256"
-                    }, {"internalType": "uint256", "name": "serialOn", "type": "uint256"}],
-                    "internalType": "struct tlb.SerialNo",
-                    "name": "serialNo",
-                    "type": "tuple"
-                }], "internalType": "struct tlb.Parts", "name": "parts", "type": "tuple"
-            }, {
-                "internalType": "enum tlb.Category",
-                "name": "category",
-                "type": "uint8"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "day",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "year",
-                    "type": "uint256"
-                }], "internalType": "struct tlb.Date", "name": "expiredDate", "type": "tuple"
-            }, {
-                "internalType": "bool",
-                "name": "etopsFlight",
-                "type": "bool"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "hour",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "minute", "type": "uint256"}],
-                "internalType": "struct tlb.FlightTime",
-                "name": "flightTime",
-                "type": "tuple"
-            }, {"internalType": "string", "name": "maintCheck", "type": "string"}, {
-                "internalType": "uint256",
-                "name": "licenceNo",
-                "type": "uint256"
-            }, {"internalType": "uint256", "name": "station", "type": "uint256"}, {
-                "internalType": "bool",
-                "name": "CaaCertification",
-                "type": "bool"
-            }], "internalType": "struct tlb.AllActionData", "name": "allActionData", "type": "tuple"
-        }, {
-            "internalType": "address",
-            "name": "employeeReportSignature",
-            "type": "address"
-        }, {
-            "internalType": "address",
-            "name": "employeeActionSignature",
-            "type": "address"
-        }, {"internalType": "address", "name": "managerSignature", "type": "address"}],
-        "internalType": "struct tlb.TLB[]",
-        "name": "",
-        "type": "tuple[]"
-    }], "stateMutability": "view", "type": "function"
-}, {
-    "inputs": [], "name": "getTLB", "outputs": [{
-        "components": [{
-            "components": [{
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "ACType",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "ACNo", "type": "uint256"}],
-                "internalType": "struct tlb.Aircraft",
-                "name": "aircraft",
-                "type": "tuple"
-            }, {"internalType": "uint256", "name": "flightNo", "type": "uint256"}, {
-                "internalType": "string",
-                "name": "flightFrom",
-                "type": "string"
-            }, {
-                "internalType": "string",
-                "name": "flightTo",
-                "type": "string"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "day",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "year",
-                    "type": "uint256"
-                }], "internalType": "struct tlb.Date", "name": "reportDate", "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "engineNo",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "addedQts", "type": "uint256"}, {
-                    "internalType": "string",
-                    "name": "finalQts",
-                    "type": "string"
-                }], "internalType": "struct tlb.EngineOil", "name": "engineOil", "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "addedOil",
-                    "type": "uint256"
-                }, {"internalType": "string", "name": "finalOil", "type": "string"}, {
-                    "internalType": "uint256",
-                    "name": "hour",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "cycles", "type": "uint256"}],
-                "internalType": "struct tlb.APU",
-                "name": "apu",
-                "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "Sys1BL",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "Sys2GC", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "Sys3YR",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "Sys4", "type": "uint256"}],
-                "internalType": "struct tlb.HydFluid",
-                "name": "hydFluid",
-                "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "string",
-                    "name": "reports",
-                    "type": "string"
-                }, {"internalType": "uint256", "name": "reportIdNo", "type": "uint256"}],
-                "internalType": "struct tlb.Report",
-                "name": "report",
-                "type": "tuple"
-            }], "internalType": "struct tlb.AllReportData", "name": "allReportData", "type": "tuple"
-        }, {
-            "components": [{
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "day",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "year",
-                    "type": "uint256"
-                }], "internalType": "struct tlb.Date", "name": "actionDate", "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "string",
-                    "name": "actions",
-                    "type": "string"
-                }, {"internalType": "uint256", "name": "actionIdNo", "type": "uint256"}],
-                "internalType": "struct tlb.Action",
-                "name": "action",
-                "type": "tuple"
-            }, {
-                "components": [{"internalType": "bool", "name": "Cdccl", "type": "bool"}, {
-                    "internalType": "bool",
-                    "name": "FcsRepair",
-                    "type": "bool"
-                }, {"internalType": "bool", "name": "Rii", "type": "bool"}, {
-                    "internalType": "enum tlb.MelCat",
-                    "name": "MelCats",
-                    "type": "uint8"
-                }, {"internalType": "bool", "name": "M", "type": "bool"}, {
-                    "internalType": "bool",
-                    "name": "O",
-                    "type": "bool"
-                }, {"internalType": "bool", "name": "notifyDispatch", "type": "bool"}, {
-                    "internalType": "uint256",
-                    "name": "licenseNo",
-                    "type": "uint256"
-                }, {
-                    "components": [{
-                        "internalType": "uint256",
-                        "name": "day",
-                        "type": "uint256"
-                    }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                        "internalType": "uint256",
-                        "name": "year",
-                        "type": "uint256"
-                    }], "internalType": "struct tlb.Date", "name": "actionDate", "type": "tuple"
-                }], "internalType": "struct tlb.Status", "name": "status", "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "item",
-                    "type": "uint256"
-                }, {"internalType": "string", "name": "nomenclature", "type": "string"}, {
-                    "internalType": "uint256",
-                    "name": "posistion",
-                    "type": "uint256"
-                }, {
-                    "components": [{
-                        "internalType": "uint256",
-                        "name": "partOff",
-                        "type": "uint256"
-                    }, {"internalType": "uint256", "name": "partOn", "type": "uint256"}],
-                    "internalType": "struct tlb.PartNo",
-                    "name": "partNo",
-                    "type": "tuple"
-                }, {
-                    "components": [{
-                        "internalType": "uint256",
-                        "name": "serialOff",
-                        "type": "uint256"
-                    }, {"internalType": "uint256", "name": "serialOn", "type": "uint256"}],
-                    "internalType": "struct tlb.SerialNo",
-                    "name": "serialNo",
-                    "type": "tuple"
-                }], "internalType": "struct tlb.Parts", "name": "parts", "type": "tuple"
-            }, {
-                "internalType": "enum tlb.Category",
-                "name": "category",
-                "type": "uint8"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "day",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "year",
-                    "type": "uint256"
-                }], "internalType": "struct tlb.Date", "name": "expiredDate", "type": "tuple"
-            }, {
-                "internalType": "bool",
-                "name": "etopsFlight",
-                "type": "bool"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "hour",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "minute", "type": "uint256"}],
-                "internalType": "struct tlb.FlightTime",
-                "name": "flightTime",
-                "type": "tuple"
-            }, {"internalType": "string", "name": "maintCheck", "type": "string"}, {
-                "internalType": "uint256",
-                "name": "licenceNo",
-                "type": "uint256"
-            }, {"internalType": "uint256", "name": "station", "type": "uint256"}, {
-                "internalType": "bool",
-                "name": "CaaCertification",
-                "type": "bool"
-            }], "internalType": "struct tlb.AllActionData", "name": "allActionData", "type": "tuple"
-        }, {
-            "internalType": "address",
-            "name": "employeeReportSignature",
-            "type": "address"
-        }, {
-            "internalType": "address",
-            "name": "employeeActionSignature",
-            "type": "address"
-        }, {"internalType": "address", "name": "managerSignature", "type": "address"}],
-        "internalType": "struct tlb.TLB[]",
-        "name": "",
-        "type": "tuple[]"
-    }], "stateMutability": "view", "type": "function"
-}, {
-    "inputs": [], "name": "getUnsignedData", "outputs": [{
-        "components": [{
-            "components": [{
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "ACType",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "ACNo", "type": "uint256"}],
-                "internalType": "struct tlb.Aircraft",
-                "name": "aircraft",
-                "type": "tuple"
-            }, {"internalType": "uint256", "name": "flightNo", "type": "uint256"}, {
-                "internalType": "string",
-                "name": "flightFrom",
-                "type": "string"
-            }, {
-                "internalType": "string",
-                "name": "flightTo",
-                "type": "string"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "day",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "year",
-                    "type": "uint256"
-                }], "internalType": "struct tlb.Date", "name": "reportDate", "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "engineNo",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "addedQts", "type": "uint256"}, {
-                    "internalType": "string",
-                    "name": "finalQts",
-                    "type": "string"
-                }], "internalType": "struct tlb.EngineOil", "name": "engineOil", "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "addedOil",
-                    "type": "uint256"
-                }, {"internalType": "string", "name": "finalOil", "type": "string"}, {
-                    "internalType": "uint256",
-                    "name": "hour",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "cycles", "type": "uint256"}],
-                "internalType": "struct tlb.APU",
-                "name": "apu",
-                "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "Sys1BL",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "Sys2GC", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "Sys3YR",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "Sys4", "type": "uint256"}],
-                "internalType": "struct tlb.HydFluid",
-                "name": "hydFluid",
-                "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "string",
-                    "name": "reports",
-                    "type": "string"
-                }, {"internalType": "uint256", "name": "reportIdNo", "type": "uint256"}],
-                "internalType": "struct tlb.Report",
-                "name": "report",
-                "type": "tuple"
-            }], "internalType": "struct tlb.AllReportData", "name": "allReportData", "type": "tuple"
-        }, {
-            "components": [{
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "day",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "year",
-                    "type": "uint256"
-                }], "internalType": "struct tlb.Date", "name": "actionDate", "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "string",
-                    "name": "actions",
-                    "type": "string"
-                }, {"internalType": "uint256", "name": "actionIdNo", "type": "uint256"}],
-                "internalType": "struct tlb.Action",
-                "name": "action",
-                "type": "tuple"
-            }, {
-                "components": [{"internalType": "bool", "name": "Cdccl", "type": "bool"}, {
-                    "internalType": "bool",
-                    "name": "FcsRepair",
-                    "type": "bool"
-                }, {"internalType": "bool", "name": "Rii", "type": "bool"}, {
-                    "internalType": "enum tlb.MelCat",
-                    "name": "MelCats",
-                    "type": "uint8"
-                }, {"internalType": "bool", "name": "M", "type": "bool"}, {
-                    "internalType": "bool",
-                    "name": "O",
-                    "type": "bool"
-                }, {"internalType": "bool", "name": "notifyDispatch", "type": "bool"}, {
-                    "internalType": "uint256",
-                    "name": "licenseNo",
-                    "type": "uint256"
-                }, {
-                    "components": [{
-                        "internalType": "uint256",
-                        "name": "day",
-                        "type": "uint256"
-                    }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                        "internalType": "uint256",
-                        "name": "year",
-                        "type": "uint256"
-                    }], "internalType": "struct tlb.Date", "name": "actionDate", "type": "tuple"
-                }], "internalType": "struct tlb.Status", "name": "status", "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "item",
-                    "type": "uint256"
-                }, {"internalType": "string", "name": "nomenclature", "type": "string"}, {
-                    "internalType": "uint256",
-                    "name": "posistion",
-                    "type": "uint256"
-                }, {
-                    "components": [{
-                        "internalType": "uint256",
-                        "name": "partOff",
-                        "type": "uint256"
-                    }, {"internalType": "uint256", "name": "partOn", "type": "uint256"}],
-                    "internalType": "struct tlb.PartNo",
-                    "name": "partNo",
-                    "type": "tuple"
-                }, {
-                    "components": [{
-                        "internalType": "uint256",
-                        "name": "serialOff",
-                        "type": "uint256"
-                    }, {"internalType": "uint256", "name": "serialOn", "type": "uint256"}],
-                    "internalType": "struct tlb.SerialNo",
-                    "name": "serialNo",
-                    "type": "tuple"
-                }], "internalType": "struct tlb.Parts", "name": "parts", "type": "tuple"
-            }, {
-                "internalType": "enum tlb.Category",
-                "name": "category",
-                "type": "uint8"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "day",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "year",
-                    "type": "uint256"
-                }], "internalType": "struct tlb.Date", "name": "expiredDate", "type": "tuple"
-            }, {
-                "internalType": "bool",
-                "name": "etopsFlight",
-                "type": "bool"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "hour",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "minute", "type": "uint256"}],
-                "internalType": "struct tlb.FlightTime",
-                "name": "flightTime",
-                "type": "tuple"
-            }, {"internalType": "string", "name": "maintCheck", "type": "string"}, {
-                "internalType": "uint256",
-                "name": "licenceNo",
-                "type": "uint256"
-            }, {"internalType": "uint256", "name": "station", "type": "uint256"}, {
-                "internalType": "bool",
-                "name": "CaaCertification",
-                "type": "bool"
-            }], "internalType": "struct tlb.AllActionData", "name": "allActionData", "type": "tuple"
-        }, {
-            "internalType": "address",
-            "name": "employeeReportSignature",
-            "type": "address"
-        }, {
-            "internalType": "address",
-            "name": "employeeActionSignature",
-            "type": "address"
-        }, {"internalType": "address", "name": "managerSignature", "type": "address"}],
-        "internalType": "struct tlb.TLB[]",
-        "name": "",
-        "type": "tuple[]"
-    }], "stateMutability": "view", "type": "function"
-}, {
-    "inputs": [{"internalType": "uint256", "name": "_pageNo", "type": "uint256"}, {
-        "components": [{
-            "components": [{
-                "internalType": "uint256",
-                "name": "day",
-                "type": "uint256"
-            }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                "internalType": "uint256",
-                "name": "year",
-                "type": "uint256"
-            }], "internalType": "struct tlb.Date", "name": "actionDate", "type": "tuple"
-        }, {
-            "components": [{"internalType": "string", "name": "actions", "type": "string"}, {
-                "internalType": "uint256",
-                "name": "actionIdNo",
-                "type": "uint256"
-            }], "internalType": "struct tlb.Action", "name": "action", "type": "tuple"
-        }, {
-            "components": [{"internalType": "bool", "name": "Cdccl", "type": "bool"}, {
-                "internalType": "bool",
-                "name": "FcsRepair",
-                "type": "bool"
-            }, {"internalType": "bool", "name": "Rii", "type": "bool"}, {
-                "internalType": "enum tlb.MelCat",
-                "name": "MelCats",
-                "type": "uint8"
-            }, {"internalType": "bool", "name": "M", "type": "bool"}, {
-                "internalType": "bool",
-                "name": "O",
-                "type": "bool"
-            }, {"internalType": "bool", "name": "notifyDispatch", "type": "bool"}, {
-                "internalType": "uint256",
-                "name": "licenseNo",
-                "type": "uint256"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "day",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "month", "type": "uint256"}, {
-                    "internalType": "uint256",
-                    "name": "year",
-                    "type": "uint256"
-                }], "internalType": "struct tlb.Date", "name": "actionDate", "type": "tuple"
-            }], "internalType": "struct tlb.Status", "name": "status", "type": "tuple"
-        }, {
-            "components": [{"internalType": "uint256", "name": "item", "type": "uint256"}, {
-                "internalType": "string",
-                "name": "nomenclature",
-                "type": "string"
-            }, {
-                "internalType": "uint256",
-                "name": "posistion",
-                "type": "uint256"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "partOff",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "partOn", "type": "uint256"}],
-                "internalType": "struct tlb.PartNo",
-                "name": "partNo",
-                "type": "tuple"
-            }, {
-                "components": [{
-                    "internalType": "uint256",
-                    "name": "serialOff",
-                    "type": "uint256"
-                }, {"internalType": "uint256", "name": "serialOn", "type": "uint256"}],
-                "internalType": "struct tlb.SerialNo",
-                "name": "serialNo",
-                "type": "tuple"
-            }], "internalType": "struct tlb.Parts", "name": "parts", "type": "tuple"
-        }, {
-            "internalType": "enum tlb.Category",
-            "name": "category",
-            "type": "uint8"
-        }, {
-            "components": [{"internalType": "uint256", "name": "day", "type": "uint256"}, {
-                "internalType": "uint256",
-                "name": "month",
-                "type": "uint256"
-            }, {"internalType": "uint256", "name": "year", "type": "uint256"}],
-            "internalType": "struct tlb.Date",
-            "name": "expiredDate",
-            "type": "tuple"
-        }, {"internalType": "bool", "name": "etopsFlight", "type": "bool"}, {
-            "components": [{
-                "internalType": "uint256",
-                "name": "hour",
-                "type": "uint256"
-            }, {"internalType": "uint256", "name": "minute", "type": "uint256"}],
-            "internalType": "struct tlb.FlightTime",
-            "name": "flightTime",
-            "type": "tuple"
-        }, {"internalType": "string", "name": "maintCheck", "type": "string"}, {
-            "internalType": "uint256",
-            "name": "licenceNo",
-            "type": "uint256"
-        }, {"internalType": "uint256", "name": "station", "type": "uint256"}, {
-            "internalType": "bool",
-            "name": "CaaCertification",
-            "type": "bool"
-        }], "internalType": "struct tlb.AllActionData", "name": "_allActionData", "type": "tuple"
-    }], "name": "updateTLB", "outputs": [], "stateMutability": "nonpayable", "type": "function"
-}], 0xdaa0CcF8E608541573Be254Db6c069bbeC9469E5

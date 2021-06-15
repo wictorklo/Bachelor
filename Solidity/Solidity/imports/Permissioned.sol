@@ -5,12 +5,12 @@ pragma solidity ^0.8.0;
 import "../PermissionManager.sol";
 
 contract Permissioned {
-    PermissionManager public pm;
+    PermissionManager pm;
 
-    address private owner;
+    address payable owner;
 
     constructor() {
-        owner = msg.sender;
+        owner = payable(msg.sender);
     }
 
     modifier onlyOwner {
@@ -27,7 +27,17 @@ contract Permissioned {
     }
 
     modifier isAdmin {
-        require(msg.sender == owner ||pm.getAdmin(msg.sender), "You are not admin");
+        require(msg.sender == address(owner) || pm.getAdmin(msg.sender), "You are not admin");
         _;
     }
+
+    modifier hasPermission(string memory perm) {
+        require(pm.accountHasCert(msg.sender, perm), "You do not have permission to perform this action");
+        _;
+    }
+
+    function kill() public onlyOwner {
+        selfdestruct(payable(address(msg.sender)));
+    }
+
 }

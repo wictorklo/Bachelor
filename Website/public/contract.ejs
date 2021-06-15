@@ -5,7 +5,9 @@
         </div>
         <div class="collapse" id="<%=name%>">
             <% methods.forEach( (method) => { %>
-                <%- include('caller', {name: name, method: method}); %>
+                <% if (method.type === "function") {%>
+                    <%- include('caller', {name: name, method: method}); %>
+                <% } %>
             <% }); %>
         </div>
     </div>

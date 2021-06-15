@@ -2,9 +2,8 @@
     <div class="card">
         <div class="card-body">
             <% Object.keys(result).slice(result.length).forEach( (elem) => { %>
-                <%= elem %>:
+                <b><%= elem %>:</b>
                 <%- include("renderValues", {result: result[elem]}) %>
-
             <% }) %>
         </div>
     </div>
