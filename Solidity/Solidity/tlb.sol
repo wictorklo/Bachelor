@@ -171,7 +171,10 @@ contract tlb is Permissioned{
     function getTLB() public view returns (TLB[] memory)  {
         TLB[] memory ret = new TLB[](pageNo);
         for (uint i = 0; i < pageNo; i++) {
-            ret[i] = TLBs[i];
+            Date memory dateTest = ret[i].allActionData.actionDate;
+            if (((block.timestamp - 30 days)*60*60*24) < BokkyPooBahsDateTimeLibrary._daysFromDate(dateTest.year, dateTest.month, dateTest.day)){
+                ret[i] = TLBs[i];
+            }
         }
         return ret;
     }

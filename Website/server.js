@@ -7,7 +7,7 @@ const Web3 = require("web3");
 const mysql = require("mysql");
 
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0xdaa0CcF8E608541573Be254Db6c069bbeC9469E5";
+const contractAddr = "0x5F2F1f4B6427A5A3A3E59CDcee06bA9331C3b583";
 const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x6c2bc72d"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"}];
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts = [];
