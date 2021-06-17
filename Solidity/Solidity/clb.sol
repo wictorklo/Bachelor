@@ -48,7 +48,7 @@ contract clb is Permissioned {
     }
 
     modifier onlyCert {
-        require(pm.accountHasCert(msg.sender, "Certified"), "Not certified");
+        require(pm.accountHasPerm(msg.sender, "Certified"), "Not certified");
         _;
     }
 

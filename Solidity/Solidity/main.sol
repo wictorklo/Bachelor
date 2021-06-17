@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: SPDX-License UNLICENSED
-
 pragma solidity ^0.8.0;
 import "./Solidity/imports/Permissioned.sol";
 
@@ -24,12 +22,12 @@ contract main is Permissioned{
         return entries;
     }
 
-    function addContract(string memory _name, string memory _ABI, string memory _addr) public isAdmin {
+    function addContract(string memory _name, string memory _ABI, string memory _addr) public onlyAdmin {
         contracts[nContracts] = Entry(_name, _ABI, _addr);
         nContracts++;
     }
 
-    function removeContract(uint pageNo) public isAdmin {
+    function removeContract(uint pageNo) public onlyAdmin {
         contracts[pageNo] = contracts[nContracts];
         delete contracts[pageNo];
         nContracts--;
