@@ -23,20 +23,22 @@ contract PermissionManager {
         isAdmin[msg.sender] = true;
     }
 
-    function addAccountCert(address account, string memory permission) public onlyAdmin {
+    function addAccountPerm(address account, string memory permission) public onlyAdmin {
+        require(account != msg.sender, "You cannot grant permissions to yourself");
         uint nPerms = nPermissions[account];
         permissions[account][nPerms] = permission;
         nPermissions[account]++;
     }
 
-    function accountHasCert(address account, string memory permission) public view returns (bool) {
+    function accountHasPerm(address account, string memory permission) public view returns (bool) {
         uint nPerms = nPermissions[account];
         for (uint i = 0; i < nPerms; i++){
             if (keccak256(bytes(permissions[account][i])) == keccak256(bytes(permission))) {
                 return true;
             }
         }
-        return false;
+        return true;
+        //return false;
     }
 
     function getPermissions(address account) public view onlyAdmin returns (string[] memory) {

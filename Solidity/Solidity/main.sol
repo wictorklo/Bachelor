@@ -22,12 +22,12 @@ contract main is Permissioned{
         return entries;
     }
 
-    function addContract(string memory _name, string memory _ABI, string memory _addr) public isAdmin {
+    function addContract(string memory _name, string memory _ABI, string memory _addr) public onlyAdmin {
         contracts[nContracts] = Entry(_name, _ABI, _addr);
         nContracts++;
     }
 
-    function removeContract(uint index) public isAdmin {
+    function removeContract(uint index) public onlyAdmin {
         contracts[index] = contracts[nContracts];
         delete contracts[index];
         nContracts--;

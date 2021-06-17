@@ -130,11 +130,6 @@ contract tlb is Permissioned{
         address certActionSignature;
     }
 
-    modifier onlyCert {
-        require(pm.accountHasCert(msg.sender, "Certified"), "Not certified");
-        _;
-    }
-
     function isValidDates(Date memory _date) private pure returns (bool) {
         if (BokkyPooBahsDateTimeLibrary.isValidDate(_date.year, _date.month, _date.day)) {
             return true;
@@ -144,7 +139,7 @@ contract tlb is Permissioned{
         }
     }
 
-    function addTLB(AllReportData memory _allReportData) public {
+    function addTLB(AllReportData memory _allReportData) public hasPermission("tlb.addTLB") {
         require(isValidDates(_allReportData.reportDate), "Not valid report date");
 
         AllActionData memory _allActionData;
@@ -153,22 +148,22 @@ contract tlb is Permissioned{
         pageNo ++;
     }
 
-    function updateTLB(uint _pageNo, AllActionData memory _allActionData) public{
+    function updateTLB(uint _pageNo, AllActionData memory _allActionData) public hasPermission("tlb.updateTLB") {
         require(isValidDates(_allActionData.actionDate), "Not valid action date");
         require(isValidDates(_allActionData.expiredDate), "Not valid expired date");
         TLBs[_pageNo].allActionData = _allActionData;
         TLBs[_pageNo].uncertActionSignature = msg.sender;
     }
 
-    function certReportSign(uint _pageNo) public onlyCert {
+    function certReportSign(uint _pageNo) public hasPermission("tlb.certReportSign") {
         TLBs[_pageNo].certReportSignature = msg.sender;
     }
 
-    function certActionSign(uint _pageNo) public onlyCert {
+    function certActionSign(uint _pageNo) public hasPermission("tlb.certActionSign") {
         TLBs[_pageNo].certActionSignature = msg.sender;
     }
 
-    function getTLB() public view returns (TLB[] memory)  {
+    function getTLB() public view hasPermission("tlb.getTLB") returns (TLB[] memory)  {
         TLB[] memory ret = new TLB[](pageNo);
         for (uint i = 0; i < pageNo; i++) {
             ret[i] = TLBs[i];
@@ -176,7 +171,7 @@ contract tlb is Permissioned{
         return ret;
     }
 
-    function getUnsignedData() public view onlyCert returns(TLB[] memory){
+    function getUnsignedData() public view hasPermission("tlb.getUnsignedData") returns(TLB[] memory){
         uint count = 0;
         TLB[] memory Tlbs = new TLB[](nTLBs);
         TLB[] memory tlbs = getTLB();
@@ -190,7 +185,7 @@ contract tlb is Permissioned{
         return Tlbs;
     }
 
-    function getSignedData() public view returns(TLB[] memory){
+    function getSignedData() public view hasPermission("tlb.getSignedData") returns(TLB[] memory){
         TLB[] memory Tlbs = new TLB[](nTLBs);
         TLB[] memory tlbs = getTLB();
         for (uint i = 0; i< nTLBs; i++) {

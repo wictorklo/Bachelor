@@ -6,7 +6,7 @@ const web3 = new Web3("http://localhost:8545");
 const bytecode = fs.readFileSync("./build/main_sol_Main.bin");
 const abi = JSON.parse(fs.readFileSync("./build/main_sol_Main.abi"));
 
-const SOURCES = ["main", "PermissionManager", "adder", "tlb", "clb"];
+const SOURCES = ["main", "PermissionManager", "adder", "tlb"];
 
 
 
@@ -48,6 +48,7 @@ let myWalletAddress;
 let PMAddress;
 
 function replaceData(newAddr, newABI) {
+    console.log("Replacing ABIs and address...");
     fs.readFile("../Website/server.js", 'utf8', function (err,data) {
         if (err) {
             return console.log(err);
@@ -76,6 +77,7 @@ function replaceData(newAddr, newABI) {
             if (err) return console.log("ReplaceData error: " + err);
         });
     });
+    console.log("Data replaced");
 }
 
 (async function () {
@@ -87,6 +89,7 @@ function replaceData(newAddr, newABI) {
     const PMContract = new web3.eth.Contract(contracts.PermissionManager.PermissionManager.abi);
 
     web3.eth.personal.unlockAccount(myWalletAddress, "", 10).then(() => {
+        console.log("Deploying main and PM...");
         myContract.deploy({
             data: contracts.main.main.evm.bytecode.object.toString()
         }).send({
@@ -113,17 +116,27 @@ function replaceData(newAddr, newABI) {
                 autoDeploy();
                 replaceData(mainDeployment.options.address, contracts.main.main.abi);
             }).then(() => {
+                console.log("Setting permissions...");
                 let contr = new web3.eth.Contract(contracts.PermissionManager.PermissionManager.abi, PMAddress);
-                let ADMINS = ["0x91dDFdB4BD66427eCDB4025f987E0FC682A487EB"];
-                let ADMINPERMS = ["adder.increment"];
-                let CERTS = [];
-                let CERTPERMS = [];
-                let WORKER = [];
+                let ADMINS = ["0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2"];
+                let CERTS = ["0x91dDFdB4BD66427eCDB4025f987E0FC682A487EB"];
+                let CERTPERMS = ["tlb.addTLB", "adder.decrement", "adder.getCount", "*"];
+                let WORKERS = ["0xC1412bB09D1B1224Ec393e465Fc191fA6b4Df0c9"];
+                let WORKERPERMS = ["tlb.addTLB", "adder.increment"];
                 ADMINS.forEach((addr) => {
-                    ADMINPERMS.forEach((perm) => {
-                        contr.methods.addAccountCert(addr, perm).send({from: myWalletAddress});
+                    contr.methods.setAdmin(addr).send({from: myWalletAddress});
+                });
+                CERTS.forEach((addr) => {
+                    CERTPERMS.forEach((perm) => {
+                        contr.methods.addAccountPerm(addr, perm).send({from: myWalletAddress});
                     })
-                })
+                });
+                WORKERS.forEach((addr) => {
+                    WORKERPERMS.forEach((perm) => {
+                        contr.methods.addAccountPerm(addr, perm).send({from: myWalletAddress});
+                    })
+                });
+                console.log("Permissions set.");
             })
         }).catch((err) => {
             console.error("Initial setup: " + err);
