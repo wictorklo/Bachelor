@@ -2,8 +2,7 @@
     let counter = 0;
     results.forEach( (result) => {
         counter += 1; %>
-        <%- include("renderModal", {result: result, name: name+"-"+counter}); %>
-        <% console.log(name + "-" + counter); %>
+        <%- include("renderModal", {result: result, name: name+"-"+counter, title: counter, format: format}); %>
     <% }); %>
 <% } else { %>
     <%= results %>

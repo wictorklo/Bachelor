@@ -1,15 +1,15 @@
-<input type="button" value="<%=name%>" onclick="$('#<%=name %>').modal('show');">
+<input type="button" value="<%=title%>" onclick="$('#<%=name %>').modal('show');">
 <div id="<%=name%>" class="modal fade" role="dialog"> <!-- elem -->
     <div class="modal-dialog"> <!-- dial -->
         <div class="modal-content"> <!-- cont -->
             <div class="modal-header"> <!-- head -->
                 <button type="button" class="close" onclick="$('#<%=name %>').modal('hide');">&times</button>
                 <h4 class="modal-title">
-                    <%= name %>
+                    <%= title %>
                 </h4>
             </div> <!-- /head -->
             <div class="modal-body"> <!-- body -->
-                <%- include("renderValues", {result: result}); %>
+                <%- include("renderValues", {result: result, format: format}); %>
             </div> <!-- /body -->
             <div class="modal-footer">
                 <button class="btn btn-default" type="submit" onclick="$('#<%=name %>').modal('hide');">Close</button>

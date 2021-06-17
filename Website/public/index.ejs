@@ -17,7 +17,7 @@
 <br />
 <div class="panel-group" role="tablist" aria-multiselectable="true" id="methods">
 <% Object.values(contracts).forEach( (contract) => { %>
-        <%- include('contract', {name: contract.name, methods: contract.ABI}); %>
+        <%- include('contract', {name: contract.name, methods: contract.ABI, format: format}); %>
 <% }); %>
 </div>
 

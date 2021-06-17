@@ -6,6 +6,14 @@ const session = require('express-session');
 const Web3 = require("web3");
 const mysql = require("mysql");
 
+let textFormat = function(text) {
+    text = text.replace(/(_)/g, (s) => " ");
+    text = text.replace(/([a-z][A-Z])/g, (s) => s.charAt(0) + " " + s.charAt(1));
+    text = text.trim();
+    text = text.replace(/(\s[a-z])/g, (s) => " " + s.charAt(1).toUpperCase());
+    return text.charAt(0).toUpperCase()+text.substring(1);
+}
+
 let web3 = new Web3('http://localhost:8545');
 const contractAddr = "0xECF130fA947585b3adB5297eac946f83bE9E8267";
 const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x6c2bc72d"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
@@ -175,7 +183,8 @@ app.post("/callMethod", urlencodedParser, (req, res) => {
                 //console.log(result);
                 res.render("renderOutput", {
                     results: result,
-                    name: target[0] + "_" + target[1] + "_render"
+                    name: target[0] + "_" + target[1] + "_render",
+                    format: textFormat
                 }, (err, html) => {
                     if (err) {
                         console.log(err);
@@ -194,7 +203,7 @@ app.get("/", async (req, res) => {
     if (req.session.uid !== undefined) {
         console.log(req.session.uid, "has logged on");
         let conts = await getPermissions(req.session.address);
-        res.render("index", {userAddress: req.session.address, contracts: conts}, (err, html) => {
+        res.render("index", {userAddress: req.session.address, contracts: conts, format: textFormat}, (err, html) => {
             console.log("html generated");
             if (err) {
                 console.log(err);
