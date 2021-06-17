@@ -1,38 +1,37 @@
-=============== Jun 16, 2021 (CEST) ===============
-10:45:53.505245 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
-10:45:53.514242 db@open opening
-10:45:53.516354 version@stat F·[] S·0B[] Sc·[]
-10:45:53.519710 db@janitor F·2 G·0
-10:45:53.519710 db@open done T·5.4682ms
-10:45:53.531801 db@close closing
-10:45:53.532318 db@close done T·516.9µs
-=============== Jun 16, 2021 (CEST) ===============
-10:45:57.090450 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
-10:45:57.092386 version@stat F·[] S·0B[] Sc·[]
-10:45:57.092386 db@open opening
-10:45:57.092386 journal@recovery F·1
-10:45:57.095384 journal@recovery recovering @1
-10:45:57.100963 memdb@flush created L0@2 N·20 S·1KiB "\x0e!\xdb..\xc0\xb1N,v7":"\xff\xe7\x02..\xaf\x015,v10"
-10:45:57.104827 version@stat F·[1] S·1KiB[1KiB] Sc·[0.25]
-10:45:57.120440 db@janitor F·3 G·0
-10:45:57.121529 db@open done T·29.1427ms
-10:45:57.208724 table@compaction range L-1 "a":"b"
-10:45:57.213766 table@compaction L0·1 -> L1·0 S·1KiB Q·26
-10:45:57.218533 table@build created L1@5 N·20 S·1KiB "\x0e!\xdb..\xc0\xb1N,v7":"\xff\xe7\x02..\xaf\x015,v10"
-10:45:57.219055 version@stat F·[0 1] S·1KiB[0B 1KiB] Sc·[0.00 0.00]
-10:45:57.221722 table@compaction committed F~ S~ Ke·0 D·0 T·7.4276ms
-10:45:57.316104 memdb@flush N·7 S·416B
-10:45:57.323571 memdb@flush created L0@7 N·7 S·558B "Dat..ion,v22":"unc..own,v28"
-10:45:57.324088 version@stat F·[1 1] S·1KiB[558B 1KiB] Sc·[0.25 0.00]
-10:45:57.326276 memdb@flush committed F·1 T·9.6176ms
-10:45:57.326839 journal@remove removed @3
-10:45:57.327365 table@compaction range L-1 "o":"p"
-10:45:57.327365 table@compaction L0·1 -> L1·1 S·1KiB Q·28
-10:45:57.331766 table@build created L1@8 N·25 S·1KiB "\x0e!\xdb..\xc0\xb1N,v7":"\xff\xe7\x02..\xaf\x015,v10"
-10:45:57.332295 version@stat F·[0 1] S·1KiB[0B 1KiB] Sc·[0.00 0.00]
-10:45:57.334543 table@compaction committed F-1 S-264B Ke·0 D·2 T·7.1781ms
-10:45:57.335609 table@remove removed @7
-10:45:57.336715 table@remove removed @5
 =============== Jun 17, 2021 (CEST) ===============
-11:47:57.000256 db@close closing
-11:47:57.012021 db@close done T·11.7653ms
+11:57:25.546007 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+11:57:25.561295 db@open opening
+11:57:25.562365 version@stat F·[] S·0B[] Sc·[]
+11:57:25.566132 db@janitor F·2 G·0
+11:57:25.566132 db@open done T·4.8368ms
+11:57:25.576693 db@close closing
+11:57:25.576693 db@close done T·0s
+=============== Jun 17, 2021 (CEST) ===============
+11:57:28.110031 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+11:57:28.110560 version@stat F·[] S·0B[] Sc·[]
+11:57:28.110560 db@open opening
+11:57:28.110560 journal@recovery F·1
+11:57:28.113543 journal@recovery recovering @1
+11:57:28.118323 memdb@flush created L0@2 N·20 S·1KiB "\x0e!\xdb..\xc0\xb1N,v7":"\xff\xe7\x02..\xaf\x015,v10"
+11:57:28.120324 version@stat F·[1] S·1KiB[1KiB] Sc·[0.25]
+11:57:28.129323 db@janitor F·3 G·0
+11:57:28.129323 db@open done T·18.7639ms
+11:57:28.226176 table@compaction range L-1 "a":"b"
+11:57:28.226713 table@compaction L0·1 -> L1·0 S·1KiB Q·26
+11:57:28.229358 table@build created L1@5 N·20 S·1KiB "\x0e!\xdb..\xc0\xb1N,v7":"\xff\xe7\x02..\xaf\x015,v10"
+11:57:28.229358 version@stat F·[0 1] S·1KiB[0B 1KiB] Sc·[0.00 0.00]
+11:57:28.233018 table@compaction committed F~ S~ Ke·0 D·0 T·6.3051ms
+11:57:28.247510 memdb@flush N·7 S·416B
+11:57:28.257666 memdb@flush created L0@7 N·7 S·558B "Dat..ion,v22":"unc..own,v28"
+11:57:28.257666 version@stat F·[1 1] S·1KiB[558B 1KiB] Sc·[0.25 0.00]
+11:57:28.263667 memdb@flush committed F·1 T·16.1574ms
+11:57:28.263667 journal@remove removed @3
+11:57:28.263667 table@compaction range L-1 "o":"p"
+11:57:28.263667 table@compaction L0·1 -> L1·1 S·1KiB Q·28
+11:57:28.268667 table@build created L1@8 N·25 S·1KiB "\x0e!\xdb..\xc0\xb1N,v7":"\xff\xe7\x02..\xaf\x015,v10"
+11:57:28.268667 version@stat F·[0 1] S·1KiB[0B 1KiB] Sc·[0.00 0.00]
+11:57:28.271669 table@compaction committed F-1 S-264B Ke·0 D·2 T·8.0023ms
+11:57:28.271669 table@remove removed @7
+11:57:28.272669 table@remove removed @5
+12:13:59.494735 db@close closing
+12:13:59.494735 db@close done T·0s

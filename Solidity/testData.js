@@ -1,6 +1,6 @@
 const Web3 = require("web3");
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0x598F9bF7F605798DAcfcc6d76d935032Bd6d5924";
+const contractAddr = "0xECF130fA947585b3adB5297eac946f83bE9E8267";
 const ABI = [{
     "inputs": [{"internalType": "string", "name": "_name", "type": "string"}, {
         "internalType": "string",
