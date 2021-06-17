@@ -1,10 +1,8 @@
 <% comps.forEach( (comp) => {%>
     <% if ('components' in comp) { %>
-        <div class="card">
-            <div class="card-body">
+        <div class="card modals">
                 <h5 class="card-title"><%= comp.name %></h5>
                 <%- include('structInput', {comps: comp.components, prefix: prefix+comp.name+"_"}) %>
-            </div>
         </div>
     <% } else {
          switch(comp.type) {
@@ -19,7 +17,7 @@
                 <input type="number" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>">
                 <% break;
             default: %>
-                <input type="text" placeholder="<%=comp.type%>: <%=comp.name%>" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>">
+                <input type="text" placeholder="<%=comp.name%>" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>">
                 <% break; %>
         <% } %>
     <% } %>

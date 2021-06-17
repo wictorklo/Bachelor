@@ -106,7 +106,7 @@ contract clb is Permissioned {
         return ret;
     }
 
-    function getArchivedCLB() public view returns (CLB[] memory)  {
+    function getArchivedCLB() private view returns (CLB[] memory)  {
         CLB[] memory ret = new CLB[](pageNo);
         for (uint i = 0; i < pageNo; i++) {
             Date memory _date = CLBs[i].allActionData.actionDate;

@@ -35,3 +35,35 @@
 11:57:28.272669 table@remove removed @5
 12:13:59.494735 db@close closing
 12:13:59.494735 db@close done T·0s
+=============== Jun 17, 2021 (CEST) ===============
+12:21:28.560090 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:21:28.560754 CURRENT: missing target file: MANIFEST-000004
+12:21:28.562316 CURRENT.bak: missing target file: MANIFEST-000000
+=============== Jun 17, 2021 (CEST) ===============
+12:21:28.563980 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:21:28.564059 table@recovery F·3
+12:21:28.564586 table@recovery recovering @8
+12:21:28.564586 table@recovery recovered @8 Gk·25 Ck·0 Cb·0 S·1620 Q·28
+12:21:28.564586 table@recovery recovering @9
+12:21:28.569082 table@recovery recovered @9 Gk·1481 Ck·0 Cb·0 S·259976 Q·1509
+12:21:28.569082 table@recovery recovering @12
+12:21:28.570078 table@recovery recovered @12 Gk·914 Ck·0 Cb·0 S·189093 Q·2424
+12:21:28.571078 table@recovery recovered F·3 N·2420 Gk·2420 Ck·0 Q·2424
+12:21:28.604902 version@stat F·[3] S·440KiB[440KiB] Sc·[0.75]
+12:21:28.608592 db@open opening
+12:21:28.609112 journal@recovery F·1
+12:21:28.611894 journal@recovery recovering @13
+12:21:28.666383 memdb@flush created L0@14 N·986 S·212KiB "\x00\x1e\xce..\xb4f\xb6,v2738":"\xff\xec\x0e..;z\x90,v2843"
+12:21:28.667452 version@stat F·[4] S·652KiB[652KiB] Sc·[1.00]
+12:21:28.673762 db@janitor F·7 G·0
+12:21:28.674327 db@open done T·65.7354ms
+12:21:28.674327 table@compaction L0·4 -> L1·0 S·652KiB Q·3412
+12:21:29.237190 table@build created L1@16 N·2435 S·449KiB "\x00\x0e\x8e..w\x1f|,v290":"\xff\xec\x0e..;z\x90,v2843"
+12:21:29.237190 version@stat F·[0 1] S·449KiB[0B 449KiB] Sc·[0.00 0.00]
+12:21:29.239827 table@compaction committed F-3 S-203KiB Ke·0 D·971 T·565.4992ms
+12:21:29.240344 table@remove removed @14
+12:21:29.240344 table@remove removed @12
+12:21:29.240918 table@remove removed @9
+12:21:29.241433 table@remove removed @8
+13:17:45.419869 db@close closing
+13:17:45.420387 db@close done T·518.4µs
