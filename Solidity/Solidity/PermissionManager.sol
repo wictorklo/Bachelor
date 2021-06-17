@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: SPDX-License UNLICENSED
 
 pragma solidity ^0.8.0;
 
@@ -23,42 +23,42 @@ contract PermissionManager {
         isAdmin[msg.sender] = true;
     }
 
-    function addAccountCert(address account, string memory permission) public onlyAdmin {
-        uint nPerms = nPermissions[account];
-        permissions[account][nPerms] = permission;
-        nPermissions[account]++;
+    function addAccountCert(address addr, string memory permission) public onlyAdmin {
+        uint nPerms = nPermissions[addr];
+        permissions[addr][nPerms] = permission;
+        nPermissions[addr]++;
     }
 
-    function accountHasCert(address account, string memory permission) public view returns (bool) {
-        uint nPerms = nPermissions[account];
+    function accountHasCert(address addr, string memory permission) public view returns (bool) {
+        uint nPerms = nPermissions[addr];
         for (uint i = 0; i < nPerms; i++){
-            if (keccak256(bytes(permissions[account][i])) == keccak256(bytes(permission))) {
+            if (keccak256(bytes(permissions[addr][i])) == keccak256(bytes(permission))) {
                 return true;
             }
         }
         return false;
     }
 
-    function getPermissions(address account) public view onlyAdmin returns (string[] memory) {
-        uint nPerms = nPermissions[account];
+    function getPermissions(address addr) public view onlyAdmin returns (string[] memory) {
+        uint nPerms = nPermissions[addr];
         string[] memory perms = new string[](nPerms);
         for (uint i = 0; i < nPerms; i++){
-            perms[i] = permissions[account][i];
+            perms[i] = permissions[addr][i];
         }
         return perms;
     }
 
-    function setAdmin(address a) public payable onlyAdmin {
-        isAdmin[a] = true;
+    function setAdmin(address addr) public payable onlyAdmin {
+        isAdmin[addr] = true;
     }
 
-    function removeAdmin(address a) public onlyAdmin {
-        require(a != owner || msg.sender == owner, "You cannot remove the owner as admin");
-        isAdmin[a] = false;
+    function removeAdmin(address addr) public onlyAdmin {
+        require(addr != owner || msg.sender == owner, "You cannot remove the owner as admin");
+        isAdmin[addr] = false;
     }
 
-    function getAdmin(address a) public view returns (bool) {
-        return isAdmin[a];
+    function getAdmin(address addr) public view returns (bool) {
+        return isAdmin[addr];
     }
 
     function kill() public onlyAdmin {

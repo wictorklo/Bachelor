@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: SPDX-License UNLICENSED
+
 import "./Solidity/imports/Permissioned.sol";
 
 contract adder is Permissioned {

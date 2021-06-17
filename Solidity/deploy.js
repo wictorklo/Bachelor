@@ -6,7 +6,7 @@ const web3 = new Web3("http://localhost:8545");
 const bytecode = fs.readFileSync("./build/main_sol_Main.bin");
 const abi = JSON.parse(fs.readFileSync("./build/main_sol_Main.abi"));
 
-const SOURCES = ["main", "PermissionManager", "adder", "tlb", "clb"];
+const SOURCES = ["main", "PermissionManager", "adder", "clb"];
 
 
 
@@ -17,6 +17,10 @@ let input = {
     sources: {
     },
     settings: {
+        optimizer: {
+            enabled: true,
+            runs: 200
+        },
         outputSelection: {
             "*": {
                 "*": ["*"],
@@ -91,23 +95,23 @@ function replaceData(newAddr, newABI) {
             data: contracts.main.main.evm.bytecode.object.toString()
         }).send({
             from: myWalletAddress,
-            gas: 5000000
+            gasPrice: 0
         }).then((mainDeployment) => {
             PMContract.deploy({
                 data: contracts.PermissionManager.PermissionManager.evm.bytecode.object.toString()
             }).send({
                 from: myWalletAddress,
-                gas: 5000000
+                gasPrice: 0
             }).then((PMDeployment) => {
                 PMAddress = PMDeployment.options.address;
                 mainContract = new web3.eth.Contract(contracts.main.main.abi, mainDeployment.options.address);
                 mainContract.methods.setPM(PMAddress).send({
                     from: myWalletAddress,
-                    gasPrice: 1
+                    gasPrice: 0
                 });
                 mainContract.methods.addContract("PermissionManager", JSON.stringify(contracts.PermissionManager.PermissionManager.abi), PMDeployment.options.address).send({
                     from: myWalletAddress,
-                    gasPrice: 1
+                    gasPrice: 0
                 });
                 console.log(mainDeployment.options.address);
                 autoDeploy();
@@ -148,16 +152,16 @@ async function autoDeploy () {
                         data: bc.toString()
                     }).send({
                         from: myWalletAddress,
-                        gas: 50000000
+                        gasPrice: 0
                     }).then((deployment) => {
                         mainContract.methods.addContract(name, rawABI, deployment.options.address).send({
                             from: myWalletAddress,
-                            gasPrice: 1
+                            gasPrice: 0
                         });
                         let newContract = new web3.eth.Contract(ABI, deployment.options.address);
                         newContract.methods.setPM(PMAddress).send({
                             from: myWalletAddress,
-                            gasPrice: 1
+                            gasPrice: 0
                         });
                     }).catch((err) => {
                         console.error("DeployError: " + err);

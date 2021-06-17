@@ -1,8 +1,9 @@
-<!DOCTYPE html>
+<!--<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Log In</title>
+    <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
 <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
@@ -15,13 +16,46 @@
     <input type="reset" onclick="document.forms['register'].submit();" value="Register">
 </form>
 
-<form id="login" action="/login" method="post">
+<form id="login" class="login" action="/login" method="post">
     <h2>Log In</h2>
+
+    <div class="container">
     <label for="email">Email:</label>
     <input type="text" id="l_email" name="email"><br>
+
     <label for="password">Password:</label>
     <input type="password" id="l_password" name="password"><br>
+
     <input type="submit" value="Log in">
+
+    </div>
+
 </form>
+</body>
+</html>-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Log In</title>
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+
+<h2>Login</h2>
+
+<form id="login" action="/login" method="post">
+
+        <label for="email">Email:</label>
+        <input type="text" id="l_email" name="email" placeholder="Enter Email"><br>
+
+        <label for="password">Password:</label>
+        <input type="password" id="l_password" name="password" placeholder="Enter Password"><br>
+
+        <input type="submit" value="Login" class="loginBtn">
+
+</form>
+
 </body>
 </html>

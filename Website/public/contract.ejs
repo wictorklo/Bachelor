@@ -1,7 +1,7 @@
 <div class="card">
     <div class="collapsed panel panel-default">
-        <div class="panel-heading" role="tab">
-            <a class="btn btn-secondary" onclick="$('#<%= name %>').collapse('toggle');"><%= name %></a>
+        <div class="panel-heading text-center" role="tab">
+            <a class="btn btn-secondary btnLook" onclick="$('#<%= name %>').collapse('toggle');"><%= name %></a>
         </div>
         <div class="collapse" id="<%=name%>">
             <% methods.forEach( (method) => { %>

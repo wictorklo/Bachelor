@@ -1,6 +1,6 @@
 const Web3 = require("web3");
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0x6cf41854E40DD4ba01BF6522Fb179fD2f34D7f5e";
+const contractAddr = "0x598F9bF7F605798DAcfcc6d76d935032Bd6d5924";
 const ABI = [{
     "inputs": [{"internalType": "string", "name": "_name", "type": "string"}, {
         "internalType": "string",
@@ -67,7 +67,7 @@ function structVals(comps, prefix) {
             } else if (comp.type === "boolean") {
                 inputs.push(Math.random() >= 0.5);
             } else {
-                inputs.push([20, 4, 2020]);
+                inputs.push([20, 5, 2021]);
             }
         }
     });

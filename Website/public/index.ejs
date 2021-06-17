@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/index.css">
     <meta charset="UTF-8">
     <title>FlightChain</title>
     <script src="js/jquery.min.js"></script>
@@ -10,9 +11,9 @@
 </head>
 <body>
 
-<a href="/logout">Log out</a>
-<h1>FlightChain(tm)</h1>
-<h2>Welcome <%=userAddress%></h2>
+<a class="logout" href="/logout">Log out</a>
+<h1>Airchain</h1>
+<h2 class="welcome"> Welcome <%=userAddress%> </h2>
 <br />
 <div class="panel-group" role="tablist" aria-multiselectable="true" id="methods">
 <% Object.values(contracts).forEach( (contract) => { %>
@@ -81,6 +82,22 @@
         );
         return false;
     });
+
+
+    var coll = document.getElementsByClassName("collapsed");
+    var i;
+
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.maxHeight){
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+            }
+        });
+    }
 
 </script>
 </html>

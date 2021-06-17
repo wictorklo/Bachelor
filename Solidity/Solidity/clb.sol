@@ -84,6 +84,39 @@ contract clb is Permissioned {
         CLBs[_pageNo].certActionSignature = msg.sender;
     }
 
+    function getCurrentFinishedCLB() public view returns (CLB[] memory)  {
+        CLB[] memory ret = new CLB[](pageNo);
+        for (uint i = 0; i < pageNo; i++) {
+            Date memory _date = CLBs[i].allActionData.actionDate;
+            if (((block.timestamp/60/60/24) - BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day))<30){
+                ret[i] = CLBs[i];
+            }
+        }
+        return ret;
+    }
+
+    function getCurrentUnfinishedCLB() public view returns (CLB[] memory)  {
+        CLB[] memory ret = new CLB[](pageNo);
+        for (uint i = 0; i < pageNo; i++) {
+            Date memory _date = CLBs[i].allReportData.reportDate;
+            if (((block.timestamp/60/60/24) - BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day))<30){
+                ret[i] = CLBs[i];
+            }
+        }
+        return ret;
+    }
+
+    function getArchivedCLB() public view returns (CLB[] memory)  {
+        CLB[] memory ret = new CLB[](pageNo);
+        for (uint i = 0; i < pageNo; i++) {
+            Date memory _date = CLBs[i].allActionData.actionDate;
+            if (((block.timestamp/60/60/24) - BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day))>30){
+                ret[i] = CLBs[i];
+            }
+        }
+        return ret;
+    }
+
     function getCLB() public view returns (CLB[] memory)  {
         CLB[] memory ret = new CLB[](pageNo);
         for (uint i = 0; i < pageNo; i++) {

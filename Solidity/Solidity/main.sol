@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: SPDX-License UNLICENSED
+
 pragma solidity ^0.8.0;
 import "./Solidity/imports/Permissioned.sol";
 
@@ -27,9 +29,9 @@ contract main is Permissioned{
         nContracts++;
     }
 
-    function removeContract(uint index) public isAdmin {
-        contracts[index] = contracts[nContracts];
-        delete contracts[index];
+    function removeContract(uint pageNo) public isAdmin {
+        contracts[pageNo] = contracts[nContracts];
+        delete contracts[pageNo];
         nContracts--;
     }
 

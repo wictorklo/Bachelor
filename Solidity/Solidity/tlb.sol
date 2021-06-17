@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: SPDX-License UNLICENSED
 
-
-//////////// get function //////////
-
 pragma solidity ^0.8.0;
-pragma experimental ABIEncoderV2;
 
 import "./Solidity/imports/BokkyPooBahsDateTimeLibrary.sol";
 import "./Solidity/imports/Permissioned.sol";
@@ -168,26 +164,53 @@ contract tlb is Permissioned{
         TLBs[_pageNo].certActionSignature = msg.sender;
     }
 
-    function getTLB() public view returns (TLB[] memory)  {
+    function getCurrentFinishedTLB() public view returns (TLB[] memory)  {
         TLB[] memory ret = new TLB[](pageNo);
         for (uint i = 0; i < pageNo; i++) {
-            Date memory dateTest = ret[i].allActionData.actionDate;
-            if (((block.timestamp - 30 days)*60*60*24) < BokkyPooBahsDateTimeLibrary._daysFromDate(dateTest.year, dateTest.month, dateTest.day)){
+            Date memory _date = TLBs[i].allActionData.actionDate;
+            if (((block.timestamp/60/60/24) - BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day))<30){
                 ret[i] = TLBs[i];
             }
         }
         return ret;
     }
 
+    function getCurrentUnfinishedTLB() public view returns (TLB[] memory)  {
+        TLB[] memory ret = new TLB[](pageNo);
+        for (uint i = 0; i < pageNo; i++) {
+            Date memory _date = TLBs[i].allReportData.reportDate;
+            if (((block.timestamp/60/60/24) - BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day))<30){
+                ret[i] = TLBs[i];
+            }
+        }
+        return ret;
+    }
+
+    function getArchivedTLB() public view returns (TLB[] memory)  {
+        TLB[] memory ret = new TLB[](pageNo);
+        for (uint i = 0; i < pageNo; i++) {
+            Date memory _date = TLBs[i].allActionData.actionDate;
+            if (((block.timestamp/60/60/24) - BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day))>30){
+                ret[i] = TLBs[i];
+            }
+        }
+        return ret;
+    }
+
+    function getTLB() public view returns (TLB[] memory)  {
+        TLB[] memory ret = new TLB[](pageNo);
+        for (uint i = 0; i < pageNo; i++) {
+            ret[i] = TLBs[i];
+        }
+        return ret;
+    }
+
     function getUnsignedData() public view onlyCert returns(TLB[] memory){
-        uint count = 0;
         TLB[] memory Tlbs = new TLB[](nTLBs);
         TLB[] memory tlbs = getTLB();
         for (uint i = 0; i < nTLBs; i++) {
             if (tlbs[i].certReportSignature == address(0) || tlbs[i].certActionSignature == address(0)) {
                 Tlbs[i] = TLBs[i];
-                Tlbs[count] = tlbs[i];
-                count++;
             }
         }
         return Tlbs;
@@ -203,8 +226,16 @@ contract tlb is Permissioned{
         }
         return Tlbs;
     }
+    /*
+        function getTime() public view returns(uint256){
+            return block.timestamp/60/60/24;
+        }
 
+        function getDay() public view returns(uint256){
+            Date memory _date = TLBs[0].allReportData.reportDate;
+            return BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day);
+        }
 
-
-
+    [[6,0],8,"5ys35","guik2",[20,5,2021],[9,5,"qbokt"],[8,"2r84x",5,4],[0,8,7,3],["5958f",8]]
+    */
 }
