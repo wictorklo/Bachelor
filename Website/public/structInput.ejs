@@ -3,6 +3,7 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title"><%= format(comp.name) %></h5>
+                <%console.log(prefix);%>
                 <%- include('structInput', {comps: comp.components, prefix: prefix+comp.name+"_", format: format}) %>
             </div>
         </div>
@@ -10,16 +11,16 @@
          switch(comp.type) {
             case "bool": %>
                 <%= format(comp.name) %>:
-                <input type="hidden" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>" value="false">
-                <input type="checkbox" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>"> <br>
+                <input type="hidden" id="<%= prefix + comp.name %>" name="<%= prefix + comp.name %>" value="false">
+                <input type="checkbox" id="<%= prefix + comp.name %>" name="<%= prefix + comp.name %>"> <br>
                 <% break;
             case "uint":
             case "int": %>
                 <%= format(comp.name) %>:
-                <input type="number" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>">
+                <input type="number" id="<%= prefix + comp.name %>" name="<%= prefix + comp.name %>">
                 <% break;
             default: %>
-                <input type="text" placeholder="<%=format(comp.name)%>" id="<%= prefix + "_" + comp.name %>" name="<%= prefix + "_" + comp.name %>">
+                <input type="text" placeholder="<%=format(comp.name)%>" id="<%= prefix + comp.name %>" name="<%= prefix + comp.name %>">
                 <% break; %>
         <% } %>
     <% } %>

@@ -32,6 +32,9 @@ contract PermissionManager {
 
     function accountHasPerm(address addr, string memory permission) public view returns (bool) {
         uint nPerms = nPermissions[addr];
+        if (getAdmin(addr)) {
+            return true;
+        }
         for (uint i = 0; i < nPerms; i++){
             if (keccak256(bytes(permissions[addr][i])) == keccak256(bytes(permission))) {
                 return true;
