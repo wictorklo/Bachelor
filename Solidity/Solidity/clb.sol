@@ -6,8 +6,6 @@ import "./Solidity/imports/BokkyPooBahsDateTimeLibrary.sol";
 import "./Solidity/imports/Permissioned.sol";
 
 contract clb is Permissioned {
-    using BokkyPooBahsDateTimeLibrary for uint;
-
     uint256 private pageNo = 0;
     uint nCLBs = 0;
     mapping(uint => CLB) private CLBs;
@@ -48,12 +46,62 @@ contract clb is Permissioned {
     }
 
     function isValidDates(Date memory _date) private pure returns (bool) {
-        if (BokkyPooBahsDateTimeLibrary.isValidDate(_date.year, _date.month, _date.day)) {
-            return true;
+        return BokkyPooBahsDateTimeLibrary.isValidDate(_date.year, _date.month, _date.day);
+    }
+
+    function daysSince(Date memory date) private view returns (uint) {
+        (uint y, uint m, uint d) = BokkyPooBahsDateTimeLibrary.timestampToDate(block.timestamp);
+        uint today = BokkyPooBahsDateTimeLibrary._daysFromDate(y, m, d);
+        return today - BokkyPooBahsDateTimeLibrary._daysFromDate(date.year, date.month, date.day);
+    }
+
+    function valid(uint8 filter, uint i) private view returns (bool){
+        /*
+        FILTERS
+        1 - unfinished
+        2 - finished
+        3 - archived
+        4 - unsigned
+        5 - signed
+        */
+        Date memory _date;
+        if (filter == 1) {
+            _date = CLBs[i].allReportData.reportDate;
+            return daysSince(_date) < 30;
+        } else if (filter == 2) {
+            _date = CLBs[i].allActionData.actionDate;
+            return daysSince(_date) < 30;
+        } else if (filter == 3) {
+            _date = CLBs[i].allActionData.actionDate;
+            return daysSince(_date) > 30 && CLBs[i].certActionSignature != address(0);
+        } else if (filter == 4) {
+            return CLBs[i].certReportSignature == address(0) || CLBs[i].certActionSignature == address(0);
+        } else if (filter == 5) {
+            return CLBs[i].certReportSignature != address(0) && CLBs[i].certActionSignature != address(0);
         }
-        else {
-            return false;
+        return false;
+    }
+
+    function getCount(uint8 filter) private view returns (uint count) {
+        count = 0;
+        for (uint i = 0; i < pageNo; i++){
+            if (valid(filter, i)){
+                count++;
+            }
         }
+        return count;
+    }
+
+    function filterList(uint8 filter) private view returns (CLB[] memory) {
+        CLB[] memory ret = new CLB[](getCount(filter));
+        uint c = 0;
+        for (uint i = 0; i < pageNo; i++){
+            if (valid(filter, i)){
+                ret[c] = CLBs[i];
+                c++;
+            }
+        }
+        return ret;
     }
 
     function addCLB(AllReportData memory _allReportData) public hasPermission("clb.addCLB") {
@@ -80,36 +128,15 @@ contract clb is Permissioned {
     }
 
     function getCurrentFinishedCLB() public view returns (CLB[] memory)  {
-        CLB[] memory ret = new CLB[](pageNo);
-        for (uint i = 0; i < pageNo; i++) {
-            Date memory _date = CLBs[i].allActionData.actionDate;
-            if (((block.timestamp/60/60/24) - BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day))<30){
-                ret[i] = CLBs[i];
-            }
-        }
-        return ret;
+        return filterList(2);
     }
 
     function getCurrentUnfinishedCLB() public view returns (CLB[] memory)  {
-        CLB[] memory ret = new CLB[](pageNo);
-        for (uint i = 0; i < pageNo; i++) {
-            Date memory _date = CLBs[i].allReportData.reportDate;
-            if (((block.timestamp/60/60/24) - BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day))<30){
-                ret[i] = CLBs[i];
-            }
-        }
-        return ret;
+        return filterList(1);
     }
 
     function getArchivedCLB() private view returns (CLB[] memory)  {
-        CLB[] memory ret = new CLB[](pageNo);
-        for (uint i = 0; i < pageNo; i++) {
-            Date memory _date = CLBs[i].allActionData.actionDate;
-            if (((block.timestamp/60/60/24) - BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day))>30){
-                ret[i] = CLBs[i];
-            }
-        }
-        return ret;
+        return filterList(3);
     }
 
     function getCLB() public view returns (CLB[] memory)  {
@@ -121,25 +148,11 @@ contract clb is Permissioned {
     }
 
     function getUnsignedData() public view returns(CLB[] memory) {
-        CLB[] memory Clbs = new CLB[](nCLBs);
-        CLB[] memory clbs = getCLB();
-        for (uint i = 0; i < nCLBs; i++) {
-            if (clbs[i].certReportSignature == address(0) || clbs[i].certActionSignature == address(0)) {
-                Clbs[i] = CLBs[i];
-            }
-        }
-        return Clbs;
+        return filterList(4);
     }
 
     function getSignedData() public view returns(CLB[] memory){
-        CLB[] memory Clbs = new CLB[](nCLBs);
-        CLB[] memory clbs = getCLB();
-        for (uint i = 0; i< nCLBs; i++) {
-            if (clbs[i].certReportSignature != address(0) && clbs[i].certActionSignature != address(0)) {
-                Clbs[i] = CLBs[i];
-            }
-        }
-        return Clbs;
+        return filterList(5);
     }
 
 }

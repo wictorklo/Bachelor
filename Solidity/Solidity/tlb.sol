@@ -152,12 +152,13 @@ contract tlb is Permissioned {
             return daysSince(_date) < 30;
         } else if (filter == 3) {
             _date = TLBs[i].allActionData.actionDate;
-            return daysSince(_date) > 30;
+            return daysSince(_date) > 30 && TLBs[i].certActionSignature != address(0);
         } else if (filter == 4) {
             return TLBs[i].certReportSignature == address(0) || TLBs[i].certActionSignature == address(0);
         } else if (filter == 5) {
             return TLBs[i].certReportSignature != address(0) && TLBs[i].certActionSignature != address(0);
         }
+        return false;
     }
 
     function getCount(uint8 filter) private view returns (uint count) {
@@ -194,6 +195,7 @@ contract tlb is Permissioned {
     function updateTLB(uint _pageNo, AllActionData memory _allActionData) public hasPermission("tlb.updateTLB") {
         require(isValidDates(_allActionData.actionDate), "Not valid action date");
         require(isValidDates(_allActionData.expiredDate), "Not valid expired date");
+        require(TLBs[_pageNo].certActionSignature == address(0), "You cannot edit a signed document");
         TLBs[_pageNo].allActionData = _allActionData;
         TLBs[_pageNo].uncertActionSignature = msg.sender;
     }

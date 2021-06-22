@@ -15,7 +15,7 @@ let textFormat = function(text) {
 }
 
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0x81e2E0dB7a4FE011F1b81403c202561Eb0bDF14c";
+const contractAddr = "0x91B17cA22dF7b95f692e9eE010BE542c995Cc848";
 const ABI = [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"},{"indexed":false,"internalType":"bool","name":"success","type":"bool"}],"name":"ChangePermissions","type":"event","signature":"0x90d0dd1f71e3e0685bcf6dfe715debdc86f68dea2c066d066c5a81a1498af30e"},{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"address","name":"_addr","type":"address"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0xf7d8bfdc"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"address","name":"addr","type":"address"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts;
@@ -81,11 +81,13 @@ con.connect();
 
 function structVals (comps, prefix, params) {
     let inputs = [];
+    console.log(params);
     comps.forEach(comp => {
         if ('components' in comp) {
-            inputs.push(structVals(comp.components, prefix + "_" + comp.name, params));
+            inputs.push(structVals(comp.components, prefix + comp.name + "_", params));
         } else {
-            inputs.push(params[prefix + "_" + comp.name]);
+            console.log("Adding", prefix + comp.name, ":", params[prefix + comp.name]);
+            inputs.push(params[prefix + comp.name]);
         }
     });
     return inputs;
@@ -96,9 +98,10 @@ async function callMethod(from, cname, method, params) {
     let abi = contract.ABI;
     let addr = contract.address;
     let contr = new web3.eth.Contract(abi, addr);
-    contr.handleRevert = true;
     let meth = abi.find(e => e.name === method);
-    let args = structVals(meth.inputs, cname + "_" + method, params);
+    console.log(cname, method);
+    let args = structVals(meth.inputs, cname + "_" + method + "_", params);
+    console.log(args);
     let result;
     if (meth.stateMutability === "view" || method.stateMutability === "pure") {
         await contr.methods[method].apply(null, args).call({from: from}).then(async (response) => {
@@ -123,7 +126,7 @@ app.post("/register", urlencodedParser, function (req, res) {
             bcrypt.hash(req.body.password, salt, function(err, hash) {
                 let query = "INSERT INTO accounts (email, password, address) VALUES ('" + req.body.email + "', '" + hash + "', 0);";
                 con.query(query, (err, result) => console.log(result + ", " + err));
-                res.redirect("/");
+                res.send("Success");
             })
         });
     } else {
@@ -176,7 +179,6 @@ app.post("/callMethod", urlencodedParser, (req, res) => {
     let params = {};
     if (req.body.data !== undefined)
         req.body.data.forEach(elem => params[elem.name] = elem.value);
-    //if (req.session.uid !== undefined)
     try {
         web3.eth.personal.unlockAccount(req.session.address, "", 10).then(() => {
             console.log("Account unlocked:", req.session.address);

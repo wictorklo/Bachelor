@@ -10,7 +10,7 @@
                 </h4>
             </div> <!-- /head -->
             <div class="modal-body"> <!-- body -->
-                <%- include('structInput', {comps: method.inputs, prefix: cname+"_"+mname+"_", format: format}); %>
+                <%- include('structInput', {comps: method.inputs, prefix: cname+"_"+mname + "_", format: format}); %>
             </div> <!-- /body -->
             <div class="modal-footer">
                 <button class="btn btn-default" type="submit" onclick="console.log('SUBMIT'); $('#modal_<%=cname + "_" + mname %>').modal('hide');">Submit</button>
