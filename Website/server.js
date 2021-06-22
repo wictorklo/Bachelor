@@ -15,7 +15,7 @@ let textFormat = function(text) {
 }
 
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0x1A7fDBF6aC056851C4a6eC81Ec2DCf4E444a2c58";
+const contractAddr = "0x91B17cA22dF7b95f692e9eE010BE542c995Cc848";
 const ABI = [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"},{"indexed":false,"internalType":"bool","name":"success","type":"bool"}],"name":"ChangePermissions","type":"event","signature":"0x90d0dd1f71e3e0685bcf6dfe715debdc86f68dea2c066d066c5a81a1498af30e"},{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"address","name":"_addr","type":"address"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0xf7d8bfdc"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"address","name":"addr","type":"address"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts;
@@ -126,7 +126,7 @@ app.post("/register", urlencodedParser, function (req, res) {
             bcrypt.hash(req.body.password, salt, function(err, hash) {
                 let query = "INSERT INTO accounts (email, password, address) VALUES ('" + req.body.email + "', '" + hash + "', 0);";
                 con.query(query, (err, result) => console.log(result + ", " + err));
-                res.redirect("/");
+                res.send("Success");
             })
         });
     } else {

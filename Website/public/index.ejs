@@ -28,7 +28,7 @@
                 </div>
                 <div class="collapse" id="AdminMenu" style="">
                     <div><br>
-                        <form id="RegisterUser" action="/register" method="post">
+                        <form class="registerUser" id="RegisterUser" action="/register" method="post">
                             <input type="text" placeholder="Email" id="email" name="email">
                             <input type="password" placeholder="Password" id="password" name="password">
                             <input type="submit" class="inputBtns" value="Register user" onclick="console.log('clicked button');">
@@ -38,12 +38,25 @@
                 </div>
             </div>
         </div>
+
+    <script>
+        $('.registerUser').submit(function(event) {
+            let objData = $(this).serializeArray();
+            console.log(objData);
+            $.post('/register', objData,
+                function(res) {
+                    console.log(res);
+                    document.getElementById("RegisterUser_out").innerHTML = res;
+                }
+            );
+            return false;
+        });
+    </script>
     <% } %>
 </div>
 
 <br>
 </body>
-<script src="https://cdn.jsdelivr.net/npm/web3@1.2.6/dist/web3.min.js"></script>
 <script>
 
 
