@@ -48,3 +48,32 @@
 11:10:00.524984 db@open done T·37.0921ms
 12:19:35.416968 db@close closing
 12:19:35.416968 db@close done T·0s
+=============== Jun 22, 2021 (CEST) ===============
+12:57:57.173836 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:57:57.173836 CURRENT: missing target file: MANIFEST-000011
+12:57:57.173836 CURRENT.bak: missing target file: MANIFEST-000017
+=============== Jun 22, 2021 (CEST) ===============
+12:57:57.178364 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:57:57.178364 table@recovery F·2
+12:57:57.178364 table@recovery recovering @20
+12:57:57.178364 table@recovery recovered @20 Gk·3213 Ck·0 Cb·0 S·590625 Q·4342
+12:57:57.178364 table@recovery recovering @21
+12:57:57.188596 table@recovery recovered @21 Gk·5298 Ck·0 Cb·0 S·1113780 Q·9641
+12:57:57.188596 table@recovery recovered F·2 N·8511 Gk·8511 Ck·0 Q·9641
+12:57:57.200082 version@stat F·[2] S·1MiB[1MiB] Sc·[0.50]
+12:57:57.201696 db@open opening
+12:57:57.201696 journal@recovery F·1
+12:57:57.204204 journal@recovery recovering @22
+12:57:57.227205 memdb@flush created L0@23 N·5391 S·1MiB "\x00\x18\xbb..\u007f86,v11114":"\xff\xf5\xbf..t\xed\xc0,v14016"
+12:57:57.228585 version@stat F·[3] S·2MiB[2MiB] Sc·[0.75]
+12:57:57.231605 db@janitor F·6 G·0
+12:57:57.231605 db@open done T·29.9091ms
+12:57:57.303479 table@compaction L0·3 -> L1·0 S·2MiB Q·15034
+12:57:57.342419 table@build created L1@25 N·8795 S·1MiB "\x00\x0e\x8e..w\x1f|,v290":"\xff\xf5\xbf..t\xed\xc0,v14794"
+12:57:57.342419 version@stat F·[0 1] S·1MiB[0B 1MiB] Sc·[0.00 0.02]
+12:57:57.344548 table@compaction committed F-2 S-1MiB Ke·0 D·5107 T·41.0689ms
+12:57:57.345097 table@remove removed @23
+12:57:57.345700 table@remove removed @21
+12:57:57.346245 table@remove removed @20
+14:57:05.893970 db@close closing
+14:57:05.896547 db@close done T·2.5775ms
