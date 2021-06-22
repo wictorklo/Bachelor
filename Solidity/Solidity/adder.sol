@@ -5,11 +5,11 @@ import "./Solidity/imports/Permissioned.sol";
 contract adder is Permissioned {
     int private count = 0;
 
-    function increment(int number) public hasPermission("adder.increment") {
+    function increment(int number) public  {
         count += number;
     }
 
-    function decrement(int number) public hasPermission("adder.decrement") {
+    function decrement(int number) public  {
         count -= number;
     }
 

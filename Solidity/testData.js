@@ -1,12 +1,25 @@
 const Web3 = require("web3");
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0x91B17cA22dF7b95f692e9eE010BE542c995Cc848";
+const contractAddr = "0x6912637d6d2615584b8C5fD50Ce40f9885077743";
 const ABI = [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"},{"indexed":false,"internalType":"bool","name":"success","type":"bool"}],"name":"ChangePermissions","type":"event","signature":"0x90d0dd1f71e3e0685bcf6dfe715debdc86f68dea2c066d066c5a81a1498af30e"},{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"address","name":"_addr","type":"address"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0xf7d8bfdc"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"address","name":"addr","type":"address"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
 
 
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts = [];
-const mainAccount = "0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2";
+let mainAccount = "0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2";
+
+async function getAccounts() {
+    let accounts = [];
+    await web3.eth.getAccounts().then(async (accs) => {
+        accounts = accs;
+        accs.forEach(async (acc) => {
+            await web3.eth.getBalance(acc).then((bal) => {
+                console.log(acc, " - ", bal)
+            });
+        });
+    });
+    return accounts;
+}
 
 async function getContracts() {
     await web3.eth.personal.unlockAccount(mainAccount, "", 0);
@@ -17,6 +30,10 @@ async function getContracts() {
         //web3.eth.personal.lockAccount(mainAccount)
 
     });
+}
+
+async function createAccount() {
+    return web3.eth.accounts.create();
 }
 
 function structVals(comps, prefix) {
@@ -39,7 +56,7 @@ function structVals(comps, prefix) {
     return inputs;
 }
 
-async function dataGeneration(cname, method) {
+async function dataGeneration(cname, method, manSign) {
     let contract = contracts[cname];
     let abi = contract.ABI;
     let addr = contract.address;
@@ -58,23 +75,50 @@ async function dataGeneration(cname, method) {
         return result;
     } else {
         let result = "";
-        await contr.methods[method].apply(null, args).send({from: mainAccount}).then((response) => {
-            result = "Success!";
-        });
+        await (async function() {
+            if (!manSign) {
+                await contr.methods[method].apply(null, args).send({from: mainAccount}).then((response) => {
+                    result = "Success";
+                });
+            } else {
+                console.log("manually signing...");
+                let tx = contr.methods[method].apply(null, args);
+                let signedTx;
+                mainAccount.signTransaction(tx, mainAccount.privateKey).then((res) => signedTx = res);
+                //await web3.eth.sendSignedTransaction(signedTx, (err, res) => {console.log(err, res)});
+                result = "Success";
+            }
+        })();
         return result;
     }
 }
 
 (async function () {
     await getContracts();
+    let accs = await getAccounts();
+    let cname, method;
+    let newAcc = false;
     if (process.argv.length === 4) {
-        var cname = process.argv[2];
-        var method = process.argv[3]
+        cname = process.argv[2];
+        method = process.argv[3];
+    } else if (process.argv.length === 5) {
+        cname = process.argv[2];
+        method = process.argv[3];
+        if (process.argv[4] === "new") {
+            mainAccount = await createAccount();
+            newAcc = true;
+        } else {
+            mainAccount = accs[process.argv[4]];
+        }
     } else {
-        var readlineSync = require('readline-sync');
-        var cname = readlineSync.question('Enter cname ');
-        var method = readlineSync.question('Enter method ');
+        let readlineSync = require('readline-sync');
+        cname = readlineSync.question('Enter cname ');
+        method = readlineSync.question('Enter method ');
     }
-    dataGeneration(cname, method);
+
+    await dataGeneration(cname, method, newAcc);
+
+    console.log("New balance:");
+    await getAccounts();
 })();
 
