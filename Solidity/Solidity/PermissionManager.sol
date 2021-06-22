@@ -20,11 +20,11 @@ contract PermissionManager {
 
     constructor() {
         owner = payable(msg.sender);
-        isAdmin[msg.sender] = true;
+        setAdmin(msg.sender);
     }
 
     function addAccountPerm(address addr, string memory permission) public onlyAdmin {
-        require(addr != msg.sender, "You cannot grant permissions to yourself");
+        require(msg.sender == owner || addr != msg.sender, "You cannot grant permissions to yourself");
         uint nPerms = nPermissions[addr];
         permissions[addr][nPerms] = permission;
         nPermissions[addr]++;
@@ -51,12 +51,25 @@ contract PermissionManager {
     }
 
     function setAdmin(address addr) public payable onlyAdmin {
+        require(isAdmin[addr] == false, "User is already admin");
         isAdmin[addr] = true;
+        addAccountPerm(addr, "Admin");
     }
 
     function removeAdmin(address addr) public onlyAdmin {
         require(addr != owner || msg.sender == owner, "You cannot remove the owner as admin");
+        require(isAdmin[addr] == true, "User is not admin");
         isAdmin[addr] = false;
+        uint nPerms = nPermissions[addr];
+        for (uint i = 0; i < nPerms; i++) {
+            if (keccak256(bytes(permissions[addr][i])) == keccak256(bytes("Admin"))){
+                permissions[addr][i] = permissions[addr][nPerms-1];
+                delete permissions[addr][nPerms-1];
+                nPermissions[addr]--;
+                return;
+            }
+        }
+
     }
 
     function getAdmin(address addr) public view returns (bool) {

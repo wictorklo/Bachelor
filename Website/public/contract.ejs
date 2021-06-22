@@ -1,12 +1,12 @@
 <div class="card">
     <div class="collapsed panel panel-default">
         <div class="panel-heading text-center" role="tab">
-            <a class="btn btn-secondary btnLook" onclick="$('#<%= name %>').collapse('toggle');"><%= name %></a>
+            <a class="btn btn-secondary btnLook" onclick="$('#<%= name %>').collapse('toggle');"><%= format(name) %></a>
         </div>
         <div class="collapse" id="<%=name%>">
             <% methods.forEach( (method) => { %>
                 <% if (method.type === "function") {%>
-                    <%- include('caller', {name: name, method: method}); %>
+                    <%- include('caller', {name: name, method: method, format: format}); %>
                 <% } %>
             <% }); %>
         </div>

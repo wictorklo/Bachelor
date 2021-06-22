@@ -3,10 +3,8 @@ const solc = require("solc");
 const path = require("path");
 const Web3 = require("web3");
 const web3 = new Web3("http://localhost:8545");
-const bytecode = fs.readFileSync("./build/main_sol_Main.bin");
-const abi = JSON.parse(fs.readFileSync("./build/main_sol_Main.abi"));
 
-const SOURCES = ["main", "PermissionManager", "adder", "clb"];
+const SOURCES = ["main", "PermissionManager", "clb", "tlb"];
 
 
 
@@ -17,10 +15,6 @@ let input = {
     sources: {
     },
     settings: {
-        optimizer: {
-            enabled: true,
-            runs: 200
-        },
         outputSelection: {
             "*": {
                 "*": ["*"],
@@ -122,11 +116,11 @@ function replaceData(newAddr, newABI) {
             }).then(() => {
                 console.log("Setting permissions...");
                 let contr = new web3.eth.Contract(contracts.PermissionManager.PermissionManager.abi, PMAddress);
-                let ADMINS = ["0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2"];
+                let ADMINS = [];
                 let CERTS = ["0x91dDFdB4BD66427eCDB4025f987E0FC682A487EB"];
-                let CERTPERMS = ["tlb.addTLB", "adder.decrement", "adder.getCount", "*"];
+                let CERTPERMS = ["tlb.addTLB", "tlb.updateTLB", "tlb.certReportSign", "tlb.getCurrentUnfinishedTLB", "tlb.getUnsignedData", "tlb.getSignedData", "clb.addCLB", "clb.updateCLB", "clb.certReportSign", "clb.getCurrentUnfinishedCLB", "clb.getUnsignedData", "clb.getSignedData"];
                 let WORKERS = ["0xC1412bB09D1B1224Ec393e465Fc191fA6b4Df0c9"];
-                let WORKERPERMS = ["tlb.addTLB", "adder.increment"];
+                let WORKERPERMS = ["tlb.addTLB", "clb.addCLB"];
                 ADMINS.forEach((addr) => {
                     contr.methods.setAdmin(addr).send({from: myWalletAddress});
                 });
@@ -141,6 +135,8 @@ function replaceData(newAddr, newABI) {
                     })
                 });
                 console.log("Permissions set.");
+            }).catch((err) => {
+                console.log("Error setting permissions: " + err);
             })
         }).catch((err) => {
             console.error("Initial setup: " + err);
@@ -167,10 +163,12 @@ async function autoDeploy () {
                         from: myWalletAddress,
                         gasPrice: 0
                     }).then((deployment) => {
+                        console.log(name, "deployed");
                         mainContract.methods.addContract(name, rawABI, deployment.options.address).send({
                             from: myWalletAddress,
+                            gas: 100000000,
                             gasPrice: 0
-                        });
+                        }).catch((err) => console.log(name, "error:", err));
                         let newContract = new web3.eth.Contract(ABI, deployment.options.address);
                         newContract.methods.setPM(PMAddress).send({
                             from: myWalletAddress,

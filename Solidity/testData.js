@@ -1,53 +1,18 @@
 const Web3 = require("web3");
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0xaf50872374A6208c7BC80d00c2027AB11fec8218";
-const ABI = [{
-    "inputs": [{"internalType": "string", "name": "_name", "type": "string"}, {
-        "internalType": "string",
-        "name": "_API",
-        "type": "string"
-    }, {"internalType": "string", "name": "_addr", "type": "string"}],
-    "name": "addContract",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function",
-    "signature": "0x6c2bc72d"
-}, {
-    "inputs": [],
-    "name": "getContracts",
-    "outputs": [{
-        "components": [{"internalType": "string", "name": "name", "type": "string"}, {
-            "internalType": "string",
-            "name": "API",
-            "type": "string"
-        }, {"internalType": "string", "name": "addr", "type": "string"}],
-        "internalType": "struct main.Entry[]",
-        "name": "results",
-        "type": "tuple[]"
-    }],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true,
-    "signature": "0xc3a2a93a"
-}, {
-    "inputs": [{"internalType": "uint256", "name": "index", "type": "uint256"}],
-    "name": "removeContract",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function",
-    "signature": "0x7cca3b06"
-}];
+const contractAddr = "0x81e2E0dB7a4FE011F1b81403c202561Eb0bDF14c";
+const ABI = [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"},{"indexed":false,"internalType":"bool","name":"success","type":"bool"}],"name":"ChangePermissions","type":"event","signature":"0x90d0dd1f71e3e0685bcf6dfe715debdc86f68dea2c066d066c5a81a1498af30e"},{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"address","name":"_addr","type":"address"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0xf7d8bfdc"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"address","name":"addr","type":"address"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
 
 
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts = [];
 const mainAccount = "0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2";
 
-async function test() {
+async function getContracts() {
     await web3.eth.personal.unlockAccount(mainAccount, "", 0);
     await mainContract.methods.getContracts().call().then((Result) => {
         Result.forEach(contract => {
-            contracts[contract[0]] = {name: contract[0], ABI: JSON.parse(contract[1]), address: contract[2]};
+            contracts[contract[0]] = {name: contract[0], ABI: JSON.parse(contract[1]), address: contract[2].toString()};
         });
         //web3.eth.personal.lockAccount(mainAccount)
 
@@ -67,7 +32,7 @@ function structVals(comps, prefix) {
             } else if (comp.type === "boolean") {
                 inputs.push(Math.random() >= 0.5);
             } else {
-                inputs.push([20, 5, 2021]);
+                inputs.push([10, 2, 2021]);
             }
         }
     });
@@ -78,10 +43,12 @@ async function dataGeneration(cname, method) {
     let contract = contracts[cname];
     let abi = contract.ABI;
     let addr = contract.address;
+    console.log(addr);
     let contr = new web3.eth.Contract(abi, addr);
     let meth = abi.find(e => e.name === method);
     let args = structVals(meth.inputs, cname + "_" + method);
     console.log(args);
+    console.log(JSON.stringify(args));
     if (meth.stateMutability === "view" || method.stateMutability === "pure") {
         let result = "";
         await contr.methods[method].apply(null, args).call().then((response) => {
@@ -99,9 +66,9 @@ async function dataGeneration(cname, method) {
 }
 
 (async function () {
-    await test();
+    await getContracts();
     if (process.argv.length === 4) {
-        var cname = process.argv[2]
+        var cname = process.argv[2];
         var method = process.argv[3]
     } else {
         var readlineSync = require('readline-sync');

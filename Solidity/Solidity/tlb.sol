@@ -5,10 +5,8 @@ pragma solidity ^0.8.0;
 import "./Solidity/imports/BokkyPooBahsDateTimeLibrary.sol";
 import "./Solidity/imports/Permissioned.sol";
 
-contract tlb is Permissioned{
-    using BokkyPooBahsDateTimeLibrary for uint;
+contract tlb is Permissioned {
 
-    uint nTLBs = 0;
     uint256 private pageNo = 0;
     enum MelCat {A, B, C, D, NA}
     enum Category {I, II, IIIA, IIIB}
@@ -127,12 +125,61 @@ contract tlb is Permissioned{
     }
 
     function isValidDates(Date memory _date) private pure returns (bool) {
-        if (BokkyPooBahsDateTimeLibrary.isValidDate(_date.year, _date.month, _date.day)) {
-            return true;
+        return BokkyPooBahsDateTimeLibrary.isValidDate(_date.year, _date.month, _date.day);
+    }
+
+    function daysSince(Date memory date) private view returns (uint) {
+        (uint y, uint m, uint d) = BokkyPooBahsDateTimeLibrary.timestampToDate(block.timestamp);
+        uint today = BokkyPooBahsDateTimeLibrary._daysFromDate(y, m, d);
+        return today - BokkyPooBahsDateTimeLibrary._daysFromDate(date.year, date.month, date.day);
+    }
+
+    function valid(uint8 filter, uint i) private view returns (bool){
+        /*
+        FILTERS
+        1 - unfinished
+        2 - finished
+        3 - archived
+        4 - unsigned
+        5 - signed
+        */
+        Date memory _date;
+        if (filter == 1) {
+            _date = TLBs[i].allReportData.reportDate;
+            return daysSince(_date) < 30;
+        } else if (filter == 2) {
+            _date = TLBs[i].allActionData.actionDate;
+            return daysSince(_date) < 30;
+        } else if (filter == 3) {
+            _date = TLBs[i].allActionData.actionDate;
+            return daysSince(_date) > 30;
+        } else if (filter == 4) {
+            return TLBs[i].certReportSignature == address(0) || TLBs[i].certActionSignature == address(0);
+        } else if (filter == 5) {
+            return TLBs[i].certReportSignature != address(0) && TLBs[i].certActionSignature != address(0);
         }
-        else {
-            return false;
+    }
+
+    function getCount(uint8 filter) private view returns (uint count) {
+        count = 0;
+        for (uint i = 0; i < pageNo; i++){
+            if (valid(filter, i)){
+                count++;
+            }
         }
+        return count;
+    }
+
+    function filterList(uint8 filter) private view returns (TLB[] memory) {
+        TLB[] memory ret = new TLB[](getCount(filter));
+        uint c = 0;
+        for (uint i = 0; i < pageNo; i++){
+            if (valid(filter, i)){
+                ret[c] = TLBs[i];
+                c++;
+            }
+        }
+        return ret;
     }
 
     function addTLB(AllReportData memory _allReportData) public hasPermission("tlb.addTLB") {
@@ -160,39 +207,18 @@ contract tlb is Permissioned{
     }
 
     function getCurrentFinishedTLB() public view hasPermission("tlb.getTLB") returns (TLB[] memory)  {
-        TLB[] memory ret = new TLB[](pageNo);
-        for (uint i = 0; i < pageNo; i++) {
-            Date memory _date = TLBs[i].allActionData.actionDate;
-            if (((block.timestamp/60/60/24) - BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day))<30){
-                ret[i] = TLBs[i];
-            }
-        }
-        return ret;
+        return filterList(2);
     }
 
-    function getCurrentUnfinishedTLB() public view returns (TLB[] memory)  {
-        TLB[] memory ret = new TLB[](pageNo);
-        for (uint i = 0; i < pageNo; i++) {
-            Date memory _date = TLBs[i].allReportData.reportDate;
-            if (((block.timestamp/60/60/24) - BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day))<30){
-                ret[i] = TLBs[i];
-            }
-        }
-        return ret;
+    function getCurrentUnfinishedTLB() public view hasPermission("tlb.getCurrentUnfinishedTLB") returns (TLB[] memory)  {
+        return filterList(1);
     }
 
-    function getArchivedTLB() public view returns (TLB[] memory)  {
-        TLB[] memory ret = new TLB[](pageNo);
-        for (uint i = 0; i < pageNo; i++) {
-            Date memory _date = TLBs[i].allActionData.actionDate;
-            if (((block.timestamp/60/60/24) - BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day))>30){
-                ret[i] = TLBs[i];
-            }
-        }
-        return ret;
+    function getArchivedTLB() public view hasPermission("tlb.getArchivedTLB") returns (TLB[] memory)  {
+        return filterList(3);
     }
 
-    function getTLB() public view returns (TLB[] memory)  {
+    function getTLB() public view hasPermission("tlb.getTLB") returns (TLB[] memory)  {
         TLB[] memory ret = new TLB[](pageNo);
         for (uint i = 0; i < pageNo; i++) {
             ret[i] = TLBs[i];
@@ -201,37 +227,11 @@ contract tlb is Permissioned{
     }
 
     function getUnsignedData() public view hasPermission("tlb.getUnsignedData") returns(TLB[] memory){
-        uint count = 0;
-        TLB[] memory Tlbs = new TLB[](nTLBs);
-        TLB[] memory tlbs = getTLB();
-        for (uint i = 0; i < nTLBs; i++) {
-            if (tlbs[i].certReportSignature == address(0) || tlbs[i].certActionSignature == address(0)) {
-                Tlbs[i] = TLBs[i];
-            }
-        }
-        return Tlbs;
+        return filterList(4);
     }
 
     function getSignedData() public view hasPermission("tlb.getSignedData") returns(TLB[] memory){
-        TLB[] memory Tlbs = new TLB[](nTLBs);
-        TLB[] memory tlbs = getTLB();
-        for (uint i = 0; i< nTLBs; i++) {
-            if (tlbs[i].certReportSignature != address(0) && tlbs[i].certActionSignature != address(0)) {
-                Tlbs[i] = TLBs[i];
-            }
-        }
-        return Tlbs;
+        return filterList(5);
     }
-    /*
-        function getTime() public view returns(uint256){
-            return block.timestamp/60/60/24;
-        }
 
-        function getDay() public view returns(uint256){
-            Date memory _date = TLBs[0].allReportData.reportDate;
-            return BokkyPooBahsDateTimeLibrary._daysFromDate(_date.year, _date.month, _date.day);
-        }
-
-    [[6,0],8,"5ys35","guik2",[20,5,2021],[9,5,"qbokt"],[8,"2r84x",5,4],[0,8,7,3],["5958f",8]]
-    */
 }

@@ -2,7 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import "../PermissionManager.sol";
+contract PermissionManager {
+    function accountHasPerm(address addr, string memory permission) public view returns (bool) {}
+
+    function getPermissions(address addr) public view returns (string[] memory) {}
+
+    function getAdmin(address addr) public view returns (bool) {}
+}
 
 contract Permissioned {
     PermissionManager pm;
@@ -14,11 +20,11 @@ contract Permissioned {
     }
 
     modifier onlyOwner {
-        require(msg.sender == owner, "Only the owner may perform this action");
+        require(msg.sender == owner || tx.origin == owner, "Only the owner may perform this action");
         _;
     }
 
-    function setPM(address addr) public onlyOwner() {
+    function setPM(address addr) public onlyOwner() virtual {
         pm = PermissionManager(addr);
     }
 

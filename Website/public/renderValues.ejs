@@ -2,8 +2,8 @@
     <div class="card modals">
         <div class="card-body">
             <% Object.keys(result).slice(result.length).forEach( (elem) => { %>
-                <b><%= elem %>:</b>
-                <%- include("renderValues", {result: result[elem]}) %>
+                <b><%= format(elem) %>:</b>
+                <%- include("renderValues", {result: result[elem], format: format}) %>
             <% }) %>
         </div>
     </div>

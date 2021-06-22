@@ -1,4 +1,4 @@
-<input type="button" value="<%=mname%>" onclick="$('#modal_<%=cname + "_" + mname %>').modal('show');">
+<input type="button" value="<%=format(mname)%>" onclick="$('#modal_<%=cname + "_" + mname %>').modal('show');">
 
 <div id="modal_<%=cname + "_" + mname%>" class="modal fade" role="dialog"> <!-- elem -->
     <div class="modal-dialog"> <!-- dial -->
@@ -6,11 +6,11 @@
             <div class="modal-header"> <!-- head -->
                 <button type="button" class="close" onclick="$('#modal_<%=cname + "_" + mname %>').modal('hide');">&times</button>
                 <h4 class="modal-title">
-                    <%= cname + ": " + mname %>
+                    <%= format(mname) %>
                 </h4>
             </div> <!-- /head -->
             <div class="modal-body"> <!-- body -->
-                <%- include('structInput', {comps: method.inputs, prefix: cname+"_"+mname+"_"}); %>
+                <%- include('structInput', {comps: method.inputs, prefix: cname+"_"+mname+"_", format: format}); %>
             </div> <!-- /body -->
             <div class="modal-footer">
                 <button class="btn btn-default" type="submit" onclick="console.log('SUBMIT'); $('#modal_<%=cname + "_" + mname %>').modal('hide');">Submit</button>

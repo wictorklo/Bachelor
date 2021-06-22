@@ -6,9 +6,17 @@ const session = require('express-session');
 const Web3 = require("web3");
 const mysql = require("mysql");
 
+let textFormat = function(text) {
+    text = text.replace(/(_)/g, (s) => " ");
+    text = text.replace(/([a-z][A-Z])/g, (s) => s.charAt(0) + " " + s.charAt(1));
+    text = text.trim();
+    text = text.replace(/(\s[a-z])/g, (s) => " " + s.charAt(1).toUpperCase());
+    return text.charAt(0).toUpperCase()+text.substring(1);
+}
+
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0xaf50872374A6208c7BC80d00c2027AB11fec8218";
-const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"string","name":"_addr","type":"string"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x6c2bc72d"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"string","name":"addr","type":"string"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
+const contractAddr = "0x81e2E0dB7a4FE011F1b81403c202561Eb0bDF14c";
+const ABI = [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"},{"indexed":false,"internalType":"bool","name":"success","type":"bool"}],"name":"ChangePermissions","type":"event","signature":"0x90d0dd1f71e3e0685bcf6dfe715debdc86f68dea2c066d066c5a81a1498af30e"},{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"address","name":"_addr","type":"address"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0xf7d8bfdc"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"address","name":"addr","type":"address"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts;
 const mainAccount = "0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2";
@@ -27,10 +35,12 @@ function getContracts() {
 
 async function getPermissions(address){
     let allowedCalls = [];
+    let isAdmin = false;
     let perms;
     await callMethod(mainAccount, "PermissionManager", "getPermissions", {PermissionManager_getPermissions_addr: address}).then((result) => {
-        if (result.some((perm) => {return perm === "*"})) {
+        if (result.some((perm) => {return perm === "Admin"})) {
             allowedCalls = contracts;
+            isAdmin = true;
             return;
         }
         perms = result;
@@ -43,7 +53,7 @@ async function getPermissions(address){
             }
         }
     });
-    return allowedCalls;
+    return {allowed: allowedCalls, admin: isAdmin};
 
 }
 
@@ -108,13 +118,12 @@ function validateEmail(email) {
 }
 
 app.post("/register", urlencodedParser, function (req, res) {
-    res.write("success!");
-    if (validateEmail(req.body.email)) {
+    if (validateEmail(req.body.email) && req.session.admin === true) {
         bcrypt.genSalt(5, function(err, salt) {
             bcrypt.hash(req.body.password, salt, function(err, hash) {
-                let query = "INSERT INTO accounts (email, pass, address) VALUES ('" + req.body.email + "', '" + hash + "', 0);";
+                let query = "INSERT INTO accounts (email, password, address) VALUES ('" + req.body.email + "', '" + hash + "', 0);";
                 con.query(query, (err, result) => console.log(result + ", " + err));
-                res.send();
+                res.redirect("/");
             })
         });
     } else {
@@ -172,17 +181,20 @@ app.post("/callMethod", urlencodedParser, (req, res) => {
         web3.eth.personal.unlockAccount(req.session.address, "", 10).then(() => {
             console.log("Account unlocked:", req.session.address);
             callMethod(req.session.address, target[0], target[1], params).then((result) => {
-                //console.log(result);
                 res.render("renderOutput", {
                     results: result,
-                    name: target[0] + "_" + target[1] + "_render"
+                    name: target[0] + "_" + target[1] + "_render",
+                    format: textFormat
                 }, (err, html) => {
                     if (err) {
                         console.log(err);
                     }
                     res.send(html)
                 });
-            }).catch((err) => res.render("error", (error, html) => res.send(html)));
+            }).catch((err) => {
+                console.log(err);
+                res.render("error", (error, html) => res.send(html))
+            });
         });
     } catch (err) {
         res.send("You need to log on");
@@ -194,7 +206,8 @@ app.get("/", async (req, res) => {
     if (req.session.uid !== undefined) {
         console.log(req.session.uid, "has logged on");
         let conts = await getPermissions(req.session.address);
-        res.render("index", {userAddress: req.session.address, contracts: conts}, (err, html) => {
+        req.session.admin = conts.admin;
+        res.render("index", {userAddress: req.session.address, contracts: conts.allowed, format: textFormat, admin: req.session.admin}, (err, html) => {
             console.log("html generated");
             if (err) {
                 console.log(err);
