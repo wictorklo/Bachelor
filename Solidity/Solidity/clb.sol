@@ -66,11 +66,9 @@ contract clb is Permissioned {
         */
         Date memory _date;
         if (filter == 1) {
-            _date = CLBs[i].allReportData.reportDate;
-            return daysSince(_date) < 30;
+            return CLBs[i].allActionData.partNo == 0 && CLBs[i].certActionSignature == address(0);
         } else if (filter == 2) {
-            _date = CLBs[i].allActionData.actionDate;
-            return daysSince(_date) < 30;
+            return CLBs[i].allActionData.partNo != 0 && CLBs[i].certActionSignature == address(0);
         } else if (filter == 3) {
             _date = CLBs[i].allActionData.actionDate;
             return daysSince(_date) > 30 && CLBs[i].certActionSignature != address(0);
@@ -135,7 +133,7 @@ contract clb is Permissioned {
         return filterList(1);
     }
 
-    function getArchivedCLB() private view returns (CLB[] memory)  {
+    function getArchivedCLB() public view returns (CLB[] memory)  {
         return filterList(3);
     }
 

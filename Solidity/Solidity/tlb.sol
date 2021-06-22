@@ -145,11 +145,9 @@ contract tlb is Permissioned {
         */
         Date memory _date;
         if (filter == 1) {
-            _date = TLBs[i].allReportData.reportDate;
-            return daysSince(_date) < 30;
+            return TLBs[i].allActionData.partNo == 0 && TLBs[i].certActionSignature == address(0);
         } else if (filter == 2) {
-            _date = TLBs[i].allActionData.actionDate;
-            return daysSince(_date) < 30;
+            return TLBs[i].allActionData.partNo != 0 && TLBs[i].certActionSignature == address(0);
         } else if (filter == 3) {
             _date = TLBs[i].allActionData.actionDate;
             return daysSince(_date) > 30 && TLBs[i].certActionSignature != address(0);

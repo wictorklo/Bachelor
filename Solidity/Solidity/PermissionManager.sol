@@ -31,6 +31,9 @@ contract PermissionManager {
     }
 
     function accountHasPerm(address addr, string memory permission) public view returns (bool) {
+        if (getAdmin(addr)){
+            return true;
+        }
         uint nPerms = nPermissions[addr];
         if (getAdmin(addr)) {
             return true;
@@ -40,8 +43,7 @@ contract PermissionManager {
                 return true;
             }
         }
-        return true;
-        //return false;
+        return false;
     }
 
     function getPermissions(address addr) public view onlyAdmin returns (string[] memory) {
