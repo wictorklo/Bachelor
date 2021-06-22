@@ -19,6 +19,26 @@
 <% Object.values(contracts).forEach( (contract) => { %>
         <%- include('contract', {name: contract.name, methods: contract.ABI, format: format}); %>
 <% }); %>
+    <% if (admin) { %>
+    <br>
+        <div class="card" style="background-color: #0dcaf0">
+            <div class="collapsed panel panel-default">
+                <div class="panel-heading text-center" role="tab">
+                    <a class="btn btn-info btnLook" onclick="$('#AdminMenu').collapse('toggle');">Add user</a>
+                </div>
+                <div class="collapse" id="AdminMenu" style="">
+                    <div><br>
+                        <form id="RegisterUser" action="/register" method="post">
+                            <input type="text" placeholder="Email" id="email" name="email">
+                            <input type="password" placeholder="Password" id="password" name="password">
+                            <input type="submit" class="inputBtns" value="Register user" onclick="console.log('clicked button');">
+                        </form>
+                        <div id="RegisterUser_out"> </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% } %>
 </div>
 
 <br>

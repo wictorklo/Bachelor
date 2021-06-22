@@ -47,11 +47,6 @@ contract clb is Permissioned {
         address certActionSignature;
     }
 
-    modifier onlyCert {
-        require(pm.accountHasPerm(msg.sender, "Certified"), "Not certified");
-        _;
-    }
-
     function isValidDates(Date memory _date) private pure returns (bool) {
         if (BokkyPooBahsDateTimeLibrary.isValidDate(_date.year, _date.month, _date.day)) {
             return true;
@@ -61,7 +56,7 @@ contract clb is Permissioned {
         }
     }
 
-    function addCLB(AllReportData memory _allReportData) public {
+    function addCLB(AllReportData memory _allReportData) public hasPermission("clb.addCLB") {
         require(isValidDates(_allReportData.reportDate), "Not valid report date");
 
         AllActionData memory _allActionData;
@@ -70,17 +65,17 @@ contract clb is Permissioned {
         pageNo ++;
     }
 
-    function updateCLB(uint _pageNo, AllActionData memory _allActionData) public{
+    function updateCLB(uint _pageNo, AllActionData memory _allActionData) public hasPermission("clb.updateCLB") {
         require(isValidDates(_allActionData.actionDate), "Not valid date");
         CLBs[_pageNo].allActionData = _allActionData;
         CLBs[_pageNo].uncertActionSignature = msg.sender;
     }
 
-    function certReportSign(uint _pageNo) public onlyCert {
+    function certReportSign(uint _pageNo) public hasPermission("clb.certReportSign") {
         CLBs[_pageNo].certReportSignature = msg.sender;
     }
 
-    function certActionSign(uint _pageNo) public onlyCert {
+    function certActionSign(uint _pageNo) public hasPermission("clb.certActionSign") {
         CLBs[_pageNo].certActionSignature = msg.sender;
     }
 
@@ -125,7 +120,7 @@ contract clb is Permissioned {
         return ret;
     }
 
-    function getUnsignedData() public view onlyCert returns(CLB[] memory) {
+    function getUnsignedData() public view returns(CLB[] memory) {
         CLB[] memory Clbs = new CLB[](nCLBs);
         CLB[] memory clbs = getCLB();
         for (uint i = 0; i < nCLBs; i++) {
