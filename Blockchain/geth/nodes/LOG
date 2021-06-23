@@ -35,3 +35,36 @@
 12:57:57.403026 table@remove removed @11
 14:57:05.898621 db@close closing
 14:57:05.898621 db@close done T·0s
+=============== Jun 22, 2021 (CEST) ===============
+15:05:05.248041 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+15:05:05.250252 version@stat F·[3 2] S·812B[494B 318B] Sc·[0.75 0.00]
+15:05:05.251698 db@open opening
+15:05:05.252540 journal@recovery F·1
+15:05:05.255365 journal@recovery recovering @15
+15:05:05.258652 memdb@flush created L0@18 N·1 S·159B "loc..seq,v14":"loc..seq,v14"
+15:05:05.264404 version@stat F·[4 2] S·971B[653B 318B] Sc·[1.00 0.00]
+15:05:05.299094 db@janitor F·9 G·1
+15:05:05.299094 db@janitor removing table-14
+15:05:05.300093 db@open done T·48.3948ms
+15:05:05.302083 table@move L0@18 -> L1
+15:05:05.302083 version@stat F·[3 3] S·971B[494B 477B] Sc·[0.75 0.00]
+20:12:17.850165 db@close closing
+20:12:17.850689 db@close done T·524.6µs
+=============== Jun 22, 2021 (CEST) ===============
+20:12:22.024679 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+20:12:22.024679 version@stat F·[3 3] S·971B[494B 477B] Sc·[0.75 0.00]
+20:12:22.024679 db@open opening
+20:12:22.024679 journal@recovery F·1
+20:12:22.032942 journal@recovery recovering @19
+20:12:22.039132 memdb@flush created L0@21 N·1 S·159B "loc..seq,v16":"loc..seq,v16"
+20:12:22.039132 version@stat F·[4 3] S·1KiB[653B 477B] Sc·[1.00 0.00]
+20:12:22.069365 db@janitor F·9 G·0
+20:12:22.069365 db@open done T·44.686ms
+20:12:22.069585 table@compaction L0·1 -> L1·1 S·318B Q·17
+20:12:22.082655 table@build created L1@24 N·1 S·159B "loc..seq,v16":"loc..seq,v16"
+20:12:22.082655 version@stat F·[3 3] S·971B[494B 477B] Sc·[0.75 0.00]
+20:12:22.094821 table@compaction committed F-1 S-159B Ke·0 D·1 T·24.678ms
+20:12:22.094821 table@remove removed @18
+=============== Jun 23, 2021 (CEST) ===============
+15:02:20.975311 db@close closing
+15:02:20.977304 db@close done T·1.9937ms
