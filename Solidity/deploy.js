@@ -119,8 +119,8 @@ function replaceData(newAddr, newABI) {
                 let ADMINS = [];
                 let CERTS = ["0x91dDFdB4BD66427eCDB4025f987E0FC682A487EB"];
                 let CERTPERMS = ["tlb.addTLB", "tlb.updateTLB", "tlb.certReportSign", "tlb.getCurrentUnfinishedTLB", "tlb.getUnsignedData", "tlb.getSignedData", "clb.addCLB", "clb.updateCLB", "clb.certReportSign", "clb.getCurrentUnfinishedCLB", "clb.getUnsignedData", "clb.getSignedData"];
-                let WORKERS = ["0xC1412bB09D1B1224Ec393e465Fc191fA6b4Df0c9"];
-                let WORKERPERMS = ["tlb.addTLB", "clb.addCLB"];
+                let WORKERS = ["0xC1412bB09D1B1224Ec393e465Fc191fA6b4Df0c9", "0xd88c6eD62F71641E12181f63577CcE80E640b5eE"];
+                let WORKERPERMS = ["tlb.addTLB", "clb.addCLB", "clb.getCLB"];
                 ADMINS.forEach((addr) => {
                     contr.methods.setAdmin(addr).send({from: myWalletAddress});
                 });
