@@ -3,7 +3,6 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title"><%= format(comp.name) %></h5>
-                <%console.log(prefix);%>
                 <%- include('structInput', {comps: comp.components, prefix: prefix+comp.name+"_", format: format}) %>
             </div>
         </div>
