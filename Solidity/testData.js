@@ -1,6 +1,6 @@
 const Web3 = require("web3");
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0x6cf41854E40DD4ba01BF6522Fb179fD2f34D7f5e";
+const contractAddr = "0xEef968cEe66920114903F4DC5CCF9be7c87D3E59";
 const ABI = [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"},{"indexed":false,"internalType":"bool","name":"success","type":"bool"}],"name":"ChangePermissions","type":"event","signature":"0x90d0dd1f71e3e0685bcf6dfe715debdc86f68dea2c066d066c5a81a1498af30e"},{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"address","name":"_addr","type":"address"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0xf7d8bfdc"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"address","name":"addr","type":"address"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
 
 
@@ -77,7 +77,7 @@ async function dataGeneration(cname, method, manSign = false) {
         let result = "";
         await async function() {
             if (!manSign) {
-                await contr.methods[method].apply(null, args).send({from: mainAccount, gasPrice: 0, gas: 0}).on("receipt", console.log);
+                await contr.methods[method].apply(null, args).send({from: mainAccount, gasPrice: "0", gas: "100000", value: "0"}).on("receipt", console.log);
             } else {
                 console.log("manually signing...");
                 let encodedTx = await (contr.methods[method].apply(null, args));
@@ -86,7 +86,7 @@ async function dataGeneration(cname, method, manSign = false) {
                     gasPrice: "0",
                     to: addr,
                     data: encodedTx.encodeABI()
-                }
+                };
 
                 let signedTx = await web3.eth.accounts.signTransaction(tx, mainAccount.privateKey).catch((err) => {console.log("SignError:", err)});
                 await web3.eth.sendSignedTransaction(signedTx.rawTransaction, (err, res) => {console.log(err, res)}).on('receipt', console.log).catch((err) => console.log(err));
