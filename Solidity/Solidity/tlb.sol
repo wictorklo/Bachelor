@@ -145,9 +145,9 @@ contract tlb is Permissioned {
         */
         Date memory _date;
         if (filter == 1) {
-            return TLBs[i].allActionData.partNo == 0 && TLBs[i].certActionSignature == address(0);
+            return TLBs[i].allActionData.licenceNo == 0 && TLBs[i].certActionSignature == address(0);
         } else if (filter == 2) {
-            return TLBs[i].allActionData.partNo != 0 && TLBs[i].certActionSignature == address(0);
+            return TLBs[i].allActionData.licenceNo != 0 && TLBs[i].certActionSignature == address(0);
         } else if (filter == 3) {
             _date = TLBs[i].allActionData.actionDate;
             return daysSince(_date) > 30 && TLBs[i].certActionSignature != address(0);

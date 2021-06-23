@@ -42,7 +42,6 @@
     <script>
         $('.registerUser').submit(function(event) {
             let objData = $(this).serializeArray();
-            console.log(objData);
             $.post('/register', objData,
                 function(res) {
                     console.log(res);
@@ -82,8 +81,11 @@
         $.post('/callMethod', objData,
             function(res) {
                 let localID = event.target.id;
-                console.log(res);
-                document.getElementById((localID+"_out").substring(5)).innerHTML = res; //Erase 'call_' prefix of ID
+                if (res === String.fromCharCode(13, 10)) { //Empty response
+                    document.getElementById((localID + "_out").substring(5)).innerHTML = "No results found";
+                } else {
+                    document.getElementById((localID + "_out").substring(5)).innerHTML = res; //Erase 'call_' prefix of ID
+                }
             }
         );
         return false;

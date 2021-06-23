@@ -13,7 +13,7 @@ contract adder is Permissioned {
         count -= number;
     }
 
-    function getCount() public view hasPermission("adder.getCount") returns (int result) {
+    function getCount() public view returns (int result) {
         return count;
     }
 }

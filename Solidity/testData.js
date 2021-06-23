@@ -1,6 +1,6 @@
 const Web3 = require("web3");
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0x6912637d6d2615584b8C5fD50Ce40f9885077743";
+const contractAddr = "0x6cf41854E40DD4ba01BF6522Fb179fD2f34D7f5e";
 const ABI = [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"},{"indexed":false,"internalType":"bool","name":"success","type":"bool"}],"name":"ChangePermissions","type":"event","signature":"0x90d0dd1f71e3e0685bcf6dfe715debdc86f68dea2c066d066c5a81a1498af30e"},{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"address","name":"_addr","type":"address"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0xf7d8bfdc"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"address","name":"addr","type":"address"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
 
 
@@ -33,7 +33,7 @@ async function getContracts() {
 }
 
 async function createAccount() {
-    return web3.eth.accounts.create();
+    return web3.eth.personal.newAccount("");
 }
 
 function structVals(comps, prefix) {
@@ -56,7 +56,7 @@ function structVals(comps, prefix) {
     return inputs;
 }
 
-async function dataGeneration(cname, method, manSign) {
+async function dataGeneration(cname, method, manSign = false) {
     let contract = contracts[cname];
     let abi = contract.ABI;
     let addr = contract.address;
@@ -75,26 +75,30 @@ async function dataGeneration(cname, method, manSign) {
         return result;
     } else {
         let result = "";
-        await (async function() {
+        await async function() {
             if (!manSign) {
-                await contr.methods[method].apply(null, args).send({from: mainAccount}).then((response) => {
-                    result = "Success";
-                });
+                await contr.methods[method].apply(null, args).send({from: mainAccount, gasPrice: 0, gas: 0}).on("receipt", console.log);
             } else {
                 console.log("manually signing...");
-                let tx = contr.methods[method].apply(null, args);
-                let signedTx;
-                mainAccount.signTransaction(tx, mainAccount.privateKey).then((res) => signedTx = res);
-                //await web3.eth.sendSignedTransaction(signedTx, (err, res) => {console.log(err, res)});
+                let encodedTx = await (contr.methods[method].apply(null, args));
+                let tx = {
+                    gas: "100000",
+                    gasPrice: "0",
+                    to: addr,
+                    data: encodedTx.encodeABI()
+                }
+
+                let signedTx = await web3.eth.accounts.signTransaction(tx, mainAccount.privateKey).catch((err) => {console.log("SignError:", err)});
+                await web3.eth.sendSignedTransaction(signedTx.rawTransaction, (err, res) => {console.log(err, res)}).on('receipt', console.log).catch((err) => console.log(err));
                 result = "Success";
             }
-        })();
+        }();
         return result;
     }
 }
 
 (async function () {
-    await getContracts();
+
     let accs = await getAccounts();
     let cname, method;
     let newAcc = false;
@@ -106,7 +110,6 @@ async function dataGeneration(cname, method, manSign) {
         method = process.argv[3];
         if (process.argv[4] === "new") {
             mainAccount = await createAccount();
-            newAcc = true;
         } else {
             mainAccount = accs[process.argv[4]];
         }
@@ -116,9 +119,11 @@ async function dataGeneration(cname, method, manSign) {
         method = readlineSync.question('Enter method ');
     }
 
-    await dataGeneration(cname, method, newAcc);
+    await getContracts();
+    dataGeneration(cname, method).then(() => {
 
-    console.log("New balance:");
-    await getAccounts();
+        console.log("New balance:");
+        let _ = getAccounts();
+    });
 })();
 

@@ -15,7 +15,7 @@ let textFormat = function(text) {
 }
 
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0x6912637d6d2615584b8C5fD50Ce40f9885077743";
+const contractAddr = "0x6cf41854E40DD4ba01BF6522Fb179fD2f34D7f5e";
 const ABI = [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"},{"indexed":false,"internalType":"bool","name":"success","type":"bool"}],"name":"ChangePermissions","type":"event","signature":"0x90d0dd1f71e3e0685bcf6dfe715debdc86f68dea2c066d066c5a81a1498af30e"},{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"address","name":"_addr","type":"address"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0xf7d8bfdc"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"address","name":"addr","type":"address"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts;
@@ -31,6 +31,10 @@ function getContracts() {
         });
         web3.eth.personal.lockAccount(mainAccount)
     });
+}
+
+async function createAccount() {
+    return web3.eth.personal.newAccount("");
 }
 
 async function getPermissions(address){
@@ -123,8 +127,10 @@ function validateEmail(email) {
 app.post("/register", urlencodedParser, function (req, res) {
     if (validateEmail(req.body.email) && req.session.admin === true) {
         bcrypt.genSalt(5, function(err, salt) {
-            bcrypt.hash(req.body.password, salt, function(err, hash) {
-                let query = "INSERT INTO accounts (email, password, address) VALUES ('" + req.body.email + "', '" + hash + "', 0);";
+            bcrypt.hash(req.body.password, salt, async function(err, hash) {
+                let newAddr = await createAccount();
+                console.log("Created address:", newAddr);
+                let query = "INSERT INTO accounts (email, password, address) VALUES ('" + req.body.email + "', '" + hash + "', '"+newAddr+"');";
                 con.query(query, (err, result) => console.log(result + ", " + err));
                 res.send("Success");
             })
