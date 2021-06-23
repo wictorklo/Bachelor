@@ -112,7 +112,7 @@ async function callMethod(from, cname, method, params) {
             result = response;
         });
     } else {
-        await contr.methods[method].apply(null, args).send({from: from}).then((response) => {
+        await contr.methods[method].apply(null, args).send({from: from, gasPrice: "0", gas: "100000", value: "0"}).then((response) => {
             result = "Success!";
         });
     }

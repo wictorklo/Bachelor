@@ -77,7 +77,7 @@ async function dataGeneration(cname, method, manSign = false) {
         let result = "";
         await async function() {
             if (!manSign) {
-                await contr.methods[method].apply(null, args).send({from: mainAccount, gasPrice: 0, gas: 0}).on("receipt", console.log);
+                await contr.methods[method].apply(null, args).send({from: mainAccount, gasPrice: "0", gas: "100000", value: "0"}).on("receipt", console.log);
             } else {
                 console.log("manually signing...");
                 let encodedTx = await (contr.methods[method].apply(null, args));
@@ -86,7 +86,7 @@ async function dataGeneration(cname, method, manSign = false) {
                     gasPrice: "0",
                     to: addr,
                     data: encodedTx.encodeABI()
-                }
+                };
 
                 let signedTx = await web3.eth.accounts.signTransaction(tx, mainAccount.privateKey).catch((err) => {console.log("SignError:", err)});
                 await web3.eth.sendSignedTransaction(signedTx.rawTransaction, (err, res) => {console.log(err, res)}).on('receipt', console.log).catch((err) => console.log(err));
