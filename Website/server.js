@@ -15,7 +15,7 @@ let textFormat = function(text) {
 }
 
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0xEef968cEe66920114903F4DC5CCF9be7c87D3E59";
+const contractAddr = "0x6cf41854E40DD4ba01BF6522Fb179fD2f34D7f5e";
 const ABI = [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"},{"indexed":false,"internalType":"bool","name":"success","type":"bool"}],"name":"ChangePermissions","type":"event","signature":"0x90d0dd1f71e3e0685bcf6dfe715debdc86f68dea2c066d066c5a81a1498af30e"},{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"address","name":"_addr","type":"address"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0xf7d8bfdc"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"address","name":"addr","type":"address"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts;
@@ -85,12 +85,10 @@ con.connect();
 
 function structVals (comps, prefix, params) {
     let inputs = [];
-    console.log(params);
     comps.forEach(comp => {
         if ('components' in comp) {
             inputs.push(structVals(comp.components, prefix + comp.name + "_", params));
         } else {
-            console.log("Adding", prefix + comp.name, ":", params[prefix + comp.name]);
             inputs.push(params[prefix + comp.name]);
         }
     });
@@ -160,6 +158,7 @@ app.post("/login", urlencodedParser, function (req, res) {
                     req.session.address = result[0].address;
                     res.cookie("uid", result[0].id, {signed: true, secret: "super secret secret"});
                     res.redirect("/");
+                    getContracts();
                 } else {
                     res.write("Invalid email or password");
                     res.send();
