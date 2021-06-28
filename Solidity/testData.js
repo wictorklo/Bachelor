@@ -120,6 +120,11 @@ async function dataGeneration(cname, method, manSign = false) {
     }
 
     await getContracts();
+
+    /*for (let i = 0; i < 10000; i++){
+        await dataGeneration(cname, method);
+    }*/
+    
     dataGeneration(cname, method).then(() => {
 
         console.log("New balance:");

@@ -1,7 +1,7 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const Web3 = require("web3");
 const mysql = require("mysql");
@@ -12,7 +12,7 @@ let textFormat = function(text) {
     text = text.trim();
     text = text.replace(/(\s[a-z])/g, (s) => " " + s.charAt(1).toUpperCase());
     return text.charAt(0).toUpperCase()+text.substring(1);
-}
+};
 
 let web3 = new Web3('http://localhost:8545');
 const contractAddr = "0x6cf41854E40DD4ba01BF6522Fb179fD2f34D7f5e";
@@ -106,7 +106,7 @@ async function callMethod(from, cname, method, params) {
     console.log(args);
     let result;
     if (meth.stateMutability === "view" || method.stateMutability === "pure") {
-        await contr.methods[method].apply(null, args).call({from: from}).then(async (response) => {
+        await contr.methods[method].apply(null, args).call({from: from, gasPrice: "0"}).then(async (response) => {
             result = response;
         });
     } else {
