@@ -1,14 +1,10 @@
 const fs = require("fs");
 const solc = require("solc");
-const path = require("path");
 const Web3 = require("web3");
 const web3 = new Web3("http://localhost:8545");
 
-const SOURCES = ["main", "PermissionManager", "clb", "tlb", "adder"];
+const SOURCES = ["main", "PermissionManager", "clb", "tlb"];
 
-
-
-//const src = fs.readFileSync(mainPath, "UTF-8");
 
 let input = {
     language: "Solidity",
@@ -54,9 +50,6 @@ function replaceData(newAddr, newABI) {
         var newData = data.replace(/const contractAddr = "0x[\dA-Za-z]+";/g, 'const contractAddr = "'+newAddr+'";');
         newData = newData.replace(/const ABI = \[.+\];/g, 'const ABI = '+JSON.stringify(newABI)+';');
 
-        /*fs.writeFile("index_BACKUP.html", data, 'utf8', function (err) {
-            if (err) return console.log(err);
-        });*/
         fs.writeFile("../Website/server.js", newData, 'utf8', function (err) {
             if (err) return console.log("ReplaceData error: " + err);
         });
@@ -68,9 +61,6 @@ function replaceData(newAddr, newABI) {
         var newData = data.replace(/const contractAddr = "0x[\dA-Za-z]+";/g, 'const contractAddr = "'+newAddr+'";');
         newData = newData.replace(/const ABI = \[.+\];/g, 'const ABI = '+JSON.stringify(newABI)+';');
 
-        /*fs.writeFile("index_BACKUP.html", data, 'utf8', function (err) {
-            if (err) return console.log(err);
-        });*/
         fs.writeFile("testData.js", newData, 'utf8', function (err) {
             if (err) return console.log("ReplaceData error: " + err);
         });

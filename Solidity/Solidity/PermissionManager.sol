@@ -2,10 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-/**
- * @title Storage
- * @dev Store & retrieve value in a variable
- */
 contract PermissionManager {
     address payable owner;
 
@@ -31,9 +27,6 @@ contract PermissionManager {
     }
 
     function accountHasPerm(address addr, string memory permission) public view returns (bool) {
-        if (getAdmin(addr)){
-            return true;
-        }
         uint nPerms = nPermissions[addr];
         if (getAdmin(addr)) {
             return true;

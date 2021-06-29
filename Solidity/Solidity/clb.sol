@@ -137,7 +137,7 @@ contract clb is Permissioned {
         return filterList(3);
     }
 
-    function getCLB() public view returns (CLB[] memory)  {
+    function getCLB() private view returns (CLB[] memory)  {
         CLB[] memory ret = new CLB[](pageNo);
         for (uint i = 0; i < pageNo; i++) {
             ret[i] = CLBs[i];

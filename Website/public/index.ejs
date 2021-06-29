@@ -58,20 +58,6 @@
 </body>
 <script>
 
-
-    function structVals (comps, prefix) {
-        let inputs = [];
-        comps.forEach( comp => {
-            if ('components' in comp){
-                inputs.push(structVals(comp.components, prefix+comp.name+"_"));
-            } else {
-                inputs.push(document.getElementById(prefix+comp.name).value);
-            }
-        } );
-        return inputs;
-    }
-
-
     $('.callMethod').submit(function(event) {
         let objData = {
             name: $(this).attr("id").substring(5), //Erase 'call_' prefix of ID

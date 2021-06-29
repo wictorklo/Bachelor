@@ -6,20 +6,34 @@ const session = require('express-session');
 const Web3 = require("web3");
 const mysql = require("mysql");
 
-let textFormat = function(text) {
-    text = text.replace(/(_)/g, (s) => " ");
-    text = text.replace(/([a-z][A-Z])/g, (s) => s.charAt(0) + " " + s.charAt(1));
-    text = text.trim();
-    text = text.replace(/(\s[a-z])/g, (s) => " " + s.charAt(1).toUpperCase());
-    return text.charAt(0).toUpperCase()+text.substring(1);
-};
-
 let web3 = new Web3('http://localhost:8545');
-const contractAddr = "0x49A280E6C59a08C66d137874c6AEecFF4959e102";
-const ABI = [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"},{"indexed":false,"internalType":"bool","name":"success","type":"bool"}],"name":"ChangePermissions","type":"event","signature":"0x90d0dd1f71e3e0685bcf6dfe715debdc86f68dea2c066d066c5a81a1498af30e"},{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"address","name":"_addr","type":"address"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0xf7d8bfdc"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"address","name":"addr","type":"address"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
+const contractAddr = "0x70f417e14c90dC8F093B573d795D7ed471C06486";
+const ABI = [{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_ABI","type":"string"},{"internalType":"address","name":"_addr","type":"address"}],"name":"addContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0xf7d8bfdc"},{"inputs":[],"name":"getContracts","outputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"ABI","type":"string"},{"internalType":"address","name":"addr","type":"address"}],"internalType":"struct main.Entry[]","name":"results","type":"tuple[]"}],"stateMutability":"view","type":"function","constant":true,"signature":"0xc3a2a93a"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x41c0e1b5"},{"inputs":[{"internalType":"uint256","name":"pageNo","type":"uint256"}],"name":"removeContract","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x7cca3b06"},{"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"setPM","outputs":[],"stateMutability":"nonpayable","type":"function","signature":"0x46efe280"}];
 const mainContract = new web3.eth.Contract(ABI, contractAddr);
 let contracts;
 const mainAccount = "0x8DB720Cf34b1b7c23E332c6F5B777b5a3Fe137d2";
+
+var app = express();
+var urlencodedParser = bodyParser.urlencoded({extended: true});
+app.use(urlencodedParser);
+app.use(express.static(__dirname + '/public'));
+app.use(cookieParser("super secret secret"));
+app.set('view engine', 'ejs');
+app.set('views', './public');
+
+app.use(session({
+    resave: false, // don't save session if unmodified
+    saveUninitialized: false, // don't create session until something stored
+    secret: "super secret secret"
+}));
+
+var con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "root",
+    database: "Bachelor"
+});
+con.connect();
 
 function getContracts() {
     contracts = [];
@@ -32,6 +46,14 @@ function getContracts() {
         web3.eth.personal.lockAccount(mainAccount)
     });
 }
+
+let textFormat = function(text) {
+    text = text.replace(/(_)/g, (s) => " ");
+    text = text.replace(/([a-z][A-Z])/g, (s) => s.charAt(0) + " " + s.charAt(1));
+    text = text.trim();
+    text = text.replace(/(\s[a-z])/g, (s) => " " + s.charAt(1).toUpperCase());
+    return text.charAt(0).toUpperCase()+text.substring(1);
+};
 
 async function createAccount() {
     return web3.eth.personal.newAccount("");
@@ -61,28 +83,6 @@ async function getPermissions(address){
 
 }
 
-var app = express();
-var urlencodedParser = bodyParser.urlencoded({extended: true});
-app.use(urlencodedParser);
-app.use(express.static(__dirname + '/public'));
-app.use(cookieParser("super secret secret"));
-app.set('view engine', 'ejs');
-app.set('views', './public');
-
-app.use(session({
-    resave: false, // don't save session if unmodified
-    saveUninitialized: false, // don't create session until something stored
-    secret: "super secret secret"
-}));
-
-var con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "root",
-    database: "Bachelor"
-});
-con.connect();
-
 function structVals (comps, prefix, params) {
     let inputs = [];
     comps.forEach(comp => {
@@ -105,7 +105,7 @@ async function callMethod(from, cname, method, params) {
     let args = structVals(meth.inputs, cname + "_" + method + "_", params);
     console.log(args);
     let result;
-    if (meth.stateMutability === "view" || method.stateMutability === "pure") {
+    if (meth.stateMutability === "view" || meth.stateMutability === "pure") {
         await contr.methods[method].apply(null, args).call({from: from, gasPrice: "0"}).then(async (response) => {
             result = response;
         });
@@ -158,7 +158,6 @@ app.post("/login", urlencodedParser, function (req, res) {
                     req.session.address = result[0].address;
                     res.cookie("uid", result[0].id, {signed: true, secret: "super secret secret"});
                     res.redirect("/");
-                    getContracts();
                 } else {
                     res.write("Invalid email or password");
                     res.send();
@@ -175,7 +174,6 @@ app.get("/logout", (req, res) => {
     if (req.session !== undefined) {
         req.session.destroy();
     }
-    console.log(res.session);
     res.redirect("/");
 });
 

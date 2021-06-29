@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: SPDX-License UNLICENSED
+
 pragma solidity ^0.8.0;
 import "./Solidity/imports/Permissioned.sol";
 
@@ -9,8 +11,6 @@ contract main is Permissioned{
         address addr;
     }
 
-    event ChangePermissions(address addr, bool success);
-
     mapping(uint => Entry) contracts;
 
     uint nContracts = 0;
@@ -19,7 +19,6 @@ contract main is Permissioned{
         pm = PermissionManager(addr);
         for (uint i = 0; i < nContracts; i++) {
             (bool success, ) = contracts[i].addr.call(abi.encodeWithSignature("setPM(address)", addr));
-            emit ChangePermissions(contracts[i].addr, success);
         }
     }
 

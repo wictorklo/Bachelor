@@ -218,7 +218,7 @@ contract tlb is Permissioned {
         return filterList(3);
     }
 
-    function getTLB() public view hasPermission("tlb.getTLB") returns (TLB[] memory)  {
+    function getTLB() private view hasPermission("tlb.getTLB") returns (TLB[] memory)  {
         TLB[] memory ret = new TLB[](pageNo);
         for (uint i = 0; i < pageNo; i++) {
             ret[i] = TLBs[i];
