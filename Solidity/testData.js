@@ -27,8 +27,6 @@ async function getContracts() {
         Result.forEach(contract => {
             contracts[contract[0]] = {name: contract[0], ABI: JSON.parse(contract[1]), address: contract[2].toString()};
         });
-        //web3.eth.personal.lockAccount(mainAccount)
-
     });
 }
 
@@ -101,7 +99,6 @@ async function dataGeneration(cname, method, manSign = false) {
 
     let accs = await getAccounts();
     let cname, method;
-    let newAcc = false;
     if (process.argv.length === 4) {
         cname = process.argv[2];
         method = process.argv[3];
