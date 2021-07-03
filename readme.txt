@@ -42,6 +42,9 @@ In a browser, connect using URL "localhost:8080"
 
 Alternative:
 Install Vagrant
+cd into Website folder
+run "npm install"
+repeat in Solidity folder
 cd into the SimNetwork folder
 run "vagrant up"
 For machines Alice, Bob and Charlie, open up firefox and enter URL "10.0.10.101:8080"
